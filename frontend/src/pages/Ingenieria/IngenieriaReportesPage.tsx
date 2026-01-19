@@ -397,7 +397,7 @@ const IngenieriaReportesPage: React.FC = () => {
       // Título a la derecha
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(18);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('REPORTE DE PRODUCCIÓN TEXTIL', pageWidth - margin, 25, { align: 'right' });
       pdf.setTextColor(0, 0, 0);
       
@@ -405,12 +405,12 @@ const IngenieriaReportesPage: React.FC = () => {
 
       // Información del pedido
       pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('INFORMACIÓN DEL PEDIDO', margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
 
       const infoPedido = [
         [`Cliente:`, reporteGenerado.cliente],
@@ -432,12 +432,12 @@ const IngenieriaReportesPage: React.FC = () => {
 
       // Resumen de Producción
       pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('RESUMEN DE PRODUCCIÓN', margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
 
       const porcentajeCumplimiento = Math.round((reporteGenerado.cantidad_confeccionada / reporteGenerado.cantidad_pedida) * 100);
       
@@ -493,7 +493,7 @@ const IngenieriaReportesPage: React.FC = () => {
 
         // Agregar títulos de gráficos
         pdf.setFontSize(14);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('GRÁFICOS DE PRODUCCIÓN', margin, yPosition);
         yPosition += 10;
 
@@ -511,12 +511,12 @@ const IngenieriaReportesPage: React.FC = () => {
 
       // Producción Diaria
       pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('PRODUCCIÓN DIARIA DETALLADA', margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(9);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('Fecha', margin, yPosition);
       pdf.text('Prendas', margin + 50, yPosition);
       pdf.text('Efectividad', margin + 90, yPosition);
@@ -526,7 +526,7 @@ const IngenieriaReportesPage: React.FC = () => {
       pdf.setDrawColor(200, 200, 200);
       pdf.line(margin, yPosition - 2, pageWidth - margin, yPosition - 2);
 
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       reporteGenerado.produccion_datos.forEach(dia => {
         pdf.text(new Date(dia.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }), margin, yPosition);
         pdf.text(dia.cantidad.toString(), margin + 50, yPosition);
@@ -542,7 +542,7 @@ const IngenieriaReportesPage: React.FC = () => {
       yPosition += 8;
       
       pdf.setFontSize(8);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       pdf.text('Este reporte fue generado automáticamente por el Sistema ERP Textil - Ingeniería', 
               pageWidth / 2, yPosition, { align: 'center' });
 

@@ -360,9 +360,9 @@ const UsuarioMiProduccionPage: React.FC = () => {
       const addText = (text: string, x: number, y: number, fontSize: number = 10, isBold: boolean = false, align: string = 'left') => {
         pdf.setFontSize(fontSize);
         if (isBold) {
-          pdf.setFont(undefined, 'bold');
+          pdf.setFont('helvetica', 'bold');
         } else {
-          pdf.setFont(undefined, 'normal');
+          pdf.setFont('helvetica', 'normal');
         }
         
         const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
@@ -412,7 +412,7 @@ const UsuarioMiProduccionPage: React.FC = () => {
       // Título
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(18);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('REPORTE DE PRODUCCIÓN', pageWidth - margin, 25, { align: 'right' });
       pdf.setTextColor(0, 0, 0);
       
@@ -420,12 +420,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
 
       // Información del reporte
       pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('DATOS DEL REPORTE', margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
 
       // Extraer información de las observaciones
       const observaciones = reporte.observaciones || '';
@@ -498,12 +498,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
       if (observaciones) {
         yPosition += 10;
         pdf.setFontSize(14);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('OBSERVACIONES Y DETALLES:', margin, yPosition);
         yPosition += 10;
         
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont('helvetica', 'normal');
         
         // Limpiar observaciones para mostrar solo lo relevante
         const observacionesLimpias = observaciones
@@ -533,12 +533,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
       if (reporte.incidencias) {
         yPosition += 10;
         pdf.setFontSize(14);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('INCIDENCIAS:', margin, yPosition);
         yPosition += 10;
         
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont('helvetica', 'normal');
         const incLines = pdf.splitTextToSize(reporte.incidencias, pageWidth - margin * 2);
         pdf.text(incLines, margin, yPosition);
         yPosition += incLines.length * lineHeight;
@@ -553,12 +553,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
       // Información del destinatario
       yPosition += 10;
       pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('INFORMACIÓN DE RECEPCIÓN', margin, yPosition);
       yPosition += 8;
       
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       pdf.text(`Destinatario: ${user?.name || 'Usuario de Producción'}`, margin, yPosition);
       yPosition += 7;
       pdf.text(`Enviado por: Área de Ingeniería`, margin, yPosition);
@@ -573,7 +573,7 @@ const UsuarioMiProduccionPage: React.FC = () => {
       yPosition += 10;
       
       pdf.setFontSize(8);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       pdf.text('Este documento contiene el reporte de producción enviado por el área de Ingeniería.', 
               pageWidth / 2, yPosition, { align: 'center' });
 
@@ -607,9 +607,9 @@ const UsuarioMiProduccionPage: React.FC = () => {
       const addText = (text: string, x: number, y: number, fontSize: number = 10, isBold: boolean = false, align: string = 'left') => {
         pdf.setFontSize(fontSize);
         if (isBold) {
-          pdf.setFont(undefined, 'bold');
+          pdf.setFont('helvetica', 'bold');
         } else {
-          pdf.setFont(undefined, 'normal');
+          pdf.setFont('helvetica', 'normal');
         }
         
         const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
@@ -659,7 +659,7 @@ const UsuarioMiProduccionPage: React.FC = () => {
       // Título
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(18);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('PEDIDO DE PRODUCCIÓN', pageWidth - margin, 25, { align: 'right' });
       pdf.setTextColor(0, 0, 0);
       
@@ -667,12 +667,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
 
       // Información del pedido
       pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('DATOS DEL PEDIDO', margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
 
       // Extraer información de las observaciones (si están estructuradas)
       const observaciones = pedido.observaciones || '';
@@ -719,12 +719,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
       if (especificacion) {
         yPosition += 5;
         pdf.setFontSize(14);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('ESPECIFICACIONES:', margin, yPosition);
         yPosition += 10;
         
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont('helvetica', 'normal');
         const specLines = pdf.splitTextToSize(especificacion, pageWidth - margin * 2);
         pdf.text(specLines, margin, yPosition);
         yPosition += specLines.length * lineHeight;
@@ -733,12 +733,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
       // Información del destinatario
       yPosition += 10;
       pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('INFORMACIÓN DE ENTREGA', margin, yPosition);
       yPosition += 8;
       
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       pdf.text(`Destinatario: ${nombreUsuario}`, margin, yPosition);
       yPosition += 7;
       pdf.text(`Enviado por: ${pedido.enviado_por_nombre || 'Ingeniería'}`, margin, yPosition);
@@ -753,7 +753,7 @@ const UsuarioMiProduccionPage: React.FC = () => {
       yPosition += 10;
       
       pdf.setFontSize(8);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       pdf.text('Este documento contiene los detalles del pedido asignado por el área de Ingeniería.', 
               pageWidth / 2, yPosition, { align: 'center' });
 
@@ -928,7 +928,7 @@ const UsuarioMiProduccionPage: React.FC = () => {
       // Título a la derecha
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('ERP TEXTIL - ORDEN DE PRODUCCIÓN', pageWidth - margin, 25, { align: 'right' });
       pdf.setTextColor(0, 0, 0);
       
@@ -936,12 +936,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
 
       // Datos del pedido
       pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('DATOS DEL PEDIDO', margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
 
       // Obtener el nombre de la línea seleccionada
       const lineaSeleccionada = lineasProduccion.find(l => l.id === formData.linea_produccion);
@@ -972,12 +972,12 @@ const UsuarioMiProduccionPage: React.FC = () => {
       if (formData.especificacion) {
         yPosition += 5;
         pdf.setFontSize(14);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('ESPECIFICACIONES:', margin, yPosition);
         yPosition += 10;
         
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont('helvetica', 'normal');
         const specLines = pdf.splitTextToSize(formData.especificacion, pageWidth - margin * 2);
         pdf.text(specLines, margin, yPosition);
         yPosition += specLines.length * lineHeight;
@@ -991,7 +991,7 @@ const UsuarioMiProduccionPage: React.FC = () => {
       yPosition += 10;
       
       pdf.setFontSize(8);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       pdf.text('Este documento fue generado automáticamente por el Sistema ERP Textil', 
               pageWidth / 2, yPosition, { align: 'center' });
 

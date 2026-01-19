@@ -389,7 +389,7 @@ const IngenieriaProduccionPage: React.FC = () => {
       // Título a la derecha
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('ERP TEXTIL - ORDEN DE PRODUCCIÓN', pageWidth - margin, 25, { align: 'right' });
       pdf.setTextColor(0, 0, 0);
       
@@ -397,12 +397,12 @@ const IngenieriaProduccionPage: React.FC = () => {
 
       // Datos del pedido
       pdf.setFontSize(14);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.text('DATOS DEL PEDIDO', margin, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(10);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
 
       // Obtener el nombre de la línea seleccionada
       const lineaSeleccionada = lineasProduccion.find(l => l.id === formData.linea_produccion);
@@ -433,12 +433,12 @@ const IngenieriaProduccionPage: React.FC = () => {
       if (formData.especificacion) {
         yPosition += 5;
         pdf.setFontSize(14);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.text('ESPECIFICACIONES:', margin, yPosition);
         yPosition += 10;
         
         pdf.setFontSize(10);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont('helvetica', 'normal');
         const specLines = pdf.splitTextToSize(formData.especificacion, pageWidth - margin * 2);
         pdf.text(specLines, margin, yPosition);
         yPosition += specLines.length * lineHeight;
@@ -452,7 +452,7 @@ const IngenieriaProduccionPage: React.FC = () => {
       yPosition += 10;
       
       pdf.setFontSize(8);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       pdf.text('Este documento fue generado automáticamente por el Sistema ERP Textil', 
               pageWidth / 2, yPosition, { align: 'center' });
 

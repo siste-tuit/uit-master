@@ -177,8 +177,8 @@ const LogsPage: React.FC = () => {
     const estadisticas = summaryContext || {
         total: 0,
         errores: 0,
-        warnings: 0,
-        info: 0,
+        advertencias: 0,
+        informacion: 0,
         debug: 0
     };
 
