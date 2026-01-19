@@ -5,12 +5,16 @@ dotenv.config();
 
 export const pool = mysql.createPool({
     host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || '3306'),
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
     multipleStatements: true,
+    connectTimeout: 60000, // 60 segundos
+    acquireTimeout: 60000, // 60 segundos
+    timeout: 60000, // 60 segundos
 });
 
 export default pool;
