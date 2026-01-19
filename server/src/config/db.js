@@ -13,8 +13,6 @@ export const pool = mysql.createPool({
     connectionLimit: 10,
     multipleStatements: true,
     connectTimeout: 60000, // 60 segundos
-    acquireTimeout: 60000, // 60 segundos
-    timeout: 60000, // 60 segundos
 });
 
 export default pool;
