@@ -280,6 +280,49 @@ async function runProduccionMigrations(connection) {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )`,
+        `CREATE TABLE IF NOT EXISTS linea_usuario (
+            id VARCHAR(36) PRIMARY KEY,
+            linea_id VARCHAR(36) NOT NULL,
+            usuario_id VARCHAR(36) NOT NULL,
+            fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            fecha_remocion TIMESTAMP NULL,
+            is_activo BOOLEAN DEFAULT TRUE,
+            FOREIGN KEY (linea_id) REFERENCES lineas_produccion(id) ON DELETE CASCADE,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+            INDEX idx_linea_usuario(linea_id, usuario_id),
+            INDEX idx_usuario_activo(usuario_id, is_activo)
+        )`,
+        `CREATE TABLE IF NOT EXISTS registros_produccion (
+            id VARCHAR(36) PRIMARY KEY,
+            linea_id VARCHAR(36) NOT NULL,
+            usuario_id VARCHAR(36) NOT NULL,
+            fecha DATE NOT NULL,
+            cantidad_producida INT NOT NULL DEFAULT 0,
+            cantidad_objetivo INT NOT NULL DEFAULT 2000,
+            cantidad_defectuosa INT DEFAULT 0,
+            eficiencia DECIMAL(5, 2) GENERATED ALWAYS AS (
+                CASE 
+                    WHEN cantidad_objetivo > 0 
+                    THEN ROUND((cantidad_producida / cantidad_objetivo) * 100, 2)
+                    ELSE 0
+                END
+            ) STORED,
+            calidad DECIMAL(5, 2) GENERATED ALWAYS AS (
+                CASE 
+                    WHEN cantidad_producida > 0 
+                    THEN ROUND(((cantidad_producida - cantidad_defectuosa) / cantidad_producida) * 100, 2)
+                    ELSE 0
+                END
+            ) STORED,
+            notas TEXT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (linea_id) REFERENCES lineas_produccion(id) ON DELETE CASCADE,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_linea_fecha (linea_id, fecha),
+            INDEX idx_fecha_produccion(fecha),
+            INDEX idx_linea_fecha(linea_id, fecha)
+        )`,
         `CREATE TABLE IF NOT EXISTS reportes_diarios (
             id VARCHAR(36) PRIMARY KEY,
             usuario_id VARCHAR(36) NOT NULL,
@@ -320,9 +363,28 @@ async function runProduccionMigrations(connection) {
 }
 
 async function runInventarioMigrations(connection) {
-    // Las tablas de inventario ya están en runCoreMigrations (inventario, productos)
-    // No hay tablas adicionales de inventario por ahora
-    await connection.query('SELECT 1');
+    // Tabla items_inventario para inventario por departamentos
+    const tables = [
+        `CREATE TABLE IF NOT EXISTS items_inventario (
+            id VARCHAR(36) PRIMARY KEY,
+            nombre VARCHAR(150) NOT NULL,
+            categoria VARCHAR(100) NOT NULL,
+            stock_actual DECIMAL(10, 3) NOT NULL DEFAULT 0,
+            stock_minimo DECIMAL(10, 3) NOT NULL DEFAULT 0,
+            stock_maximo DECIMAL(10, 3) NOT NULL DEFAULT 0,
+            unidad VARCHAR(20) NOT NULL DEFAULT 'unidad',
+            departamento ENUM('ingenieria', 'mantenimiento') NOT NULL,
+            status ENUM('disponible', 'bajo_stock', 'agotado') DEFAULT 'disponible',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_departamento (departamento),
+            INDEX idx_status (status)
+        )`
+    ];
+
+    for (const sql of tables) {
+        await connection.query(sql);
+    }
 }
 
 async function runReportesProduccionMigrations(connection) {
