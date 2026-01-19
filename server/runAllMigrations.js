@@ -456,29 +456,43 @@ async function runContabilidadMigrations(connection) {
 
 async function runAsistenciaMigrations(connection) {
     const tables = [
+        // Tabla de trabajadores (con campo area)
         `CREATE TABLE IF NOT EXISTS trabajadores (
-            id CHAR(36) PRIMARY KEY,
-            usuario_id CHAR(36) NOT NULL,
+            id CHAR(36) PRIMARY KEY COMMENT 'UUID',
+            usuario_id CHAR(36) NOT NULL COMMENT 'Usuario (línea de producción) que gestiona este trabajador',
             nombre_completo VARCHAR(150) NOT NULL,
-            dni VARCHAR(20) NULL,
+            dni VARCHAR(20) NULL COMMENT 'Documento Nacional de Identidad',
             telefono VARCHAR(20) NULL,
-            cargo VARCHAR(100) NULL,
+            cargo VARCHAR(100) NULL COMMENT 'Ej: Operador, Supervisor, etc.',
+            area VARCHAR(100) NULL COMMENT 'Ej: Costura, Corte, Empaque, Control de Calidad',
             fecha_ingreso DATE NULL,
             is_activo BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+            INDEX idx_trabajador_usuario(usuario_id),
+            INDEX idx_trabajador_activo(usuario_id, is_activo)
         )`,
-        `CREATE TABLE IF NOT EXISTS asistencia (
-            id CHAR(36) PRIMARY KEY,
+        // Tabla de registros de asistencia (con todos los campos necesarios)
+        `CREATE TABLE IF NOT EXISTS registros_asistencia (
+            id CHAR(36) PRIMARY KEY COMMENT 'UUID',
             trabajador_id CHAR(36) NOT NULL,
-            fecha DATE NOT NULL,
-            hora_entrada TIME NULL,
-            hora_salida TIME NULL,
-            horas_trabajadas DECIMAL(4, 2) NULL,
+            usuario_id CHAR(36) NOT NULL COMMENT 'Usuario que registra la asistencia',
+            fecha DATE NOT NULL COMMENT 'Fecha del registro',
+            hora_entrada TIME NULL COMMENT 'Hora de entrada al trabajo',
+            hora_refrigerio_salida TIME NULL COMMENT 'Hora de salida a refrigerio',
+            hora_refrigerio_llegada TIME NULL COMMENT 'Hora de llegada de refrigerio',
+            hora_salida TIME NULL COMMENT 'Hora de salida del trabajo',
+            horas_trabajadas DECIMAL(4, 2) NULL COMMENT 'Horas trabajadas calculadas',
             observaciones TEXT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (trabajador_id) REFERENCES trabajadores(id) ON DELETE CASCADE
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (trabajador_id) REFERENCES trabajadores(id) ON DELETE CASCADE,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+            INDEX idx_registro_trabajador(trabajador_id),
+            INDEX idx_registro_fecha(fecha),
+            INDEX idx_registro_usuario(usuario_id),
+            UNIQUE KEY uk_trabajador_fecha (trabajador_id, fecha)
         )`
     ];
 
