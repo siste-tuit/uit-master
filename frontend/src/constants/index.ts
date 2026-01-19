@@ -17,7 +17,7 @@ export const colors = {
 };
 
 // Definición de Roles del Sistema
-export const userRoles: UserRole[] = [
+export const userRoles: any[] = [
   {
     id: 'manager',
     name: 'Gerente',
@@ -48,19 +48,19 @@ export const userRoles: UserRole[] = [
 ];
 
 // Líneas de Producción
-export const productionLines: ProductionLine[] = Array.from({ length: 13 }, (_, i) => ({
+export const productionLines: any[] = Array.from({ length: 13 }, (_, i) => ({
   id: `line_${i + 1}`,
   name: `Línea ${i + 1}`,
-  status: i < 8 ? 'active' : i < 10 ? 'maintenance' : 'stopped',
+  type: 'hilado',
+  capacity: 1000 + (i * 100),
+  currentProduction: Math.floor(Math.random() * 800) + 200,
+  status: i < 8 ? 'activa' : i < 10 ? 'mantenimiento' : 'parada',
   efficiency: Math.floor(Math.random() * 30) + 70, // 70-100%
-  operator: `Operador L${i + 1}`,
-  currentProduct: `Producto ${i + 1}`,
-  target: 1000 + (i * 100),
-  produced: Math.floor(Math.random() * 800) + 200
+  assignedUsers: [`Operador L${i + 1}`]
 }));
 
 // Crear roles para cada línea de producción
-export const lineRoles: UserRole[] = productionLines.map(line => ({
+export const lineRoles: any[] = productionLines.map(line => ({
   id: line.id,
   name: `Operador ${line.name}`,
   level: 4,

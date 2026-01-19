@@ -173,10 +173,10 @@ const SistemasDashboard: React.FC = () => {
                 key={metric.id} 
                 metric={{
                   id: metric.id,
-                  name: metric.title,
+                  title: metric.title,
                   value: metric.value,
                   unit: metric.unit,
-                  trend: metric.trend,
+                  trend: metric.trend as "up" | "down" | "stable",
                   percentage: metric.percentage,
                   color: metric.color
                 }} 
@@ -186,8 +186,8 @@ const SistemasDashboard: React.FC = () => {
 
           {/* Gráficos principales */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <ProductionChart data={productionData} />
-            <EfficiencyChart data={productionData} />
+            <ProductionChart data={productionData as any} />
+            <EfficiencyChart data={productionData as any} />
           </div>
 
           {/* Estado del sistema y usuarios */}

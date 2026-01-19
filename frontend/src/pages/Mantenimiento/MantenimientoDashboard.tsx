@@ -22,12 +22,12 @@ const MantenimientoDashboard: React.FC = () => {
           <div key={index} className="p-4 bg-white rounded-lg shadow-md">
             <div className="flex items-center">
               <div className="p-2 text-blue-600 bg-blue-100 rounded-full">
-                <span className="text-xl">{metric.icon}</span>
+                <span className="text-xl">📊</span>
               </div>
               <div className="ml-3">
-                <p className="text-xs font-medium text-gray-600">{metric.name}</p>
-                <p className="text-lg font-bold text-gray-900">{metric.value}</p>
-                <p className="text-xs text-green-600">{metric.change}</p>
+                <p className="text-xs font-medium text-gray-600">{metric.title}</p>
+                <p className="text-lg font-bold text-gray-900">{metric.value} {metric.unit}</p>
+                <p className="text-xs text-green-600">{metric.percentage > 0 ? '+' : ''}{metric.percentage}%</p>
               </div>
             </div>
           </div>
