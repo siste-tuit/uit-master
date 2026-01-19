@@ -184,7 +184,7 @@ const AdminDashboard: React.FC = () => {
               name: metric.title,
               value: metric.value,
               unit: metric.unit,
-              trend: metric.trend,
+              trend: metric.trend as "up" | "down" | "stable",
               percentage: metric.percentage,
               color: metric.color
             }} 

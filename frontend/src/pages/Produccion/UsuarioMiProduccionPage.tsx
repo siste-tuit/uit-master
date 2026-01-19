@@ -274,7 +274,7 @@ const UsuarioMiProduccionPage: React.FC = () => {
             console.log(`   Reporte ${index + 1}:`, {
               id: reporte.id,
               fecha: reporte.fecha,
-              usuario_id: reporte.usuario_id,
+              usuario_id: (reporte as any).usuario_id || reporte.id,
               observaciones: reporte.observaciones?.substring(0, 100),
               esDeIngenieria: esDeIngenieria
             });
