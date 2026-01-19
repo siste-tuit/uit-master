@@ -1,0 +1,17 @@
+# COMANDOS PARA SUBIR CÓDIGO A GITHUB
+# Ejecuta estos en PowerShell, uno por uno
+
+cd "D:\Empresa UIT\UIT-master"
+
+git init
+
+git add .
+
+git commit -m "Sistema UIT listo para producción"
+
+git branch -M main
+
+# ⚠️ REEMPLAZA TU-USUARIO con tu usuario de GitHub (ej: siste-tuit)
+git remote add origin https://github.com/TU-USUARIO/uit-master.git
+
+git push -u origin main

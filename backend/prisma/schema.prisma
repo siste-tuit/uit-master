@@ -1,0 +1,298 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// Usuarios y Autenticación
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String @default("USER")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  createdPurchases PurchaseOrder[]
+  createdSales     SalesOrder[]
+  createdProduction ProductionOrder[]
+
+  @@map("users")
+}
+
+// UserRole values: ADMIN, MANAGER, PRODUCTION, SALES, PURCHASES, USER
+
+// Proveedores
+model Supplier {
+  id          String  @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  contactName String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  purchases PurchaseOrder[]
+  materials Material[]
+
+  @@map("suppliers")
+}
+
+// Clientes
+model Customer {
+  id          String  @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  contactName String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  sales SalesOrder[]
+
+  @@map("customers")
+}
+
+// Categorías de Materiales
+model MaterialCategory {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  materials Material[]
+
+  @@map("material_categories")
+}
+
+// Materiales/Materias Primas
+model Material {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String   @unique
+  categoryId  String
+  supplierId  String?
+  unit        String   // kg, metros, litros, etc.
+  costPrice   Decimal  @default(0)
+  minStock    Int      @default(0)
+  maxStock    Int      @default(0)
+  currentStock Int     @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  category     MaterialCategory @relation(fields: [categoryId], references: [id])
+  supplier     Supplier?        @relation(fields: [supplierId], references: [id])
+  purchaseItems PurchaseItem[]
+  productionItems ProductionItem[]
+  inventoryMovements InventoryMovement[]
+
+  @@map("materials")
+}
+
+// Productos Terminados
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String   @unique
+  unit        String
+  salePrice   Decimal  @default(0)
+  minStock    Int      @default(0)
+  maxStock    Int      @default(0)
+  currentStock Int     @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  salesItems SalesItem[]
+  productionItems ProductionItem[]
+
+  @@map("products")
+}
+
+// Órdenes de Compra
+model PurchaseOrder {
+  id          String            @id @default(cuid())
+  orderNumber String            @unique
+  supplierId  String
+  userId      String
+  status      String            @default("PENDING")
+  totalAmount Decimal           @default(0)
+  orderDate   DateTime          @default(now())
+  expectedDate DateTime?
+  receivedDate DateTim
+  notes      String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  // Relaciones
+  supplier Supplier      @relation(fields: [supplierId], references: [id])
+  user     User          @relation(fields: [userId], references: [id])
+  items    PurchaseItem[]
+
+  @@map("purchase_orders")
+}
+
+// PurchaseStatus values: PENDING, APPROVED, RECEIVED, CANCELLED
+
+// Items de Órdenes de Compra
+model PurchaseItem {
+  id             String  @id @default(cuid())
+  purchaseOrderId String
+  materialId     String
+  quantity       Int
+  unitPrice      Decimal
+  totalPrice     Decimal
+  receivedQuantity Int   @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relaciones
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  material      Material      @relation(fields: [materialId], references: [id])
+
+  @@map("purchase_items")
+}
+
+// Órdenes de Venta
+model SalesOrder {
+  id          String       @id @default(cuid())
+  orderNumber String       @unique
+  customerId  String
+  userId      String
+  status      String       @default("PENDING")
+  totalAmount Decimal      @default(0)
+  orderDate   DateTime     @default(now())
+  deliveryDate DateTime?
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relaciones
+  customer Customer   @relation(fields: [customerId], references: [id])
+  user     User       @relation(fields: [userId], references: [id])
+  items    SalesItem[]
+  productionOrders ProductionOrder[]
+
+  @@map("sales_orders")
+}
+
+// SalesStatus values: PENDING, CONFIRMED, IN_PRODUCTION, READY, DELIVERED, CANCELLED
+
+// Items de Órdenes de Venta
+model SalesItem {
+  id           String  @id @default(cuid())
+  salesOrderId String
+  productId    String
+  quantity     Int
+  unitPrice    Decimal
+  totalPrice   Decimal
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relaciones
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id])
+
+  @@map("sales_items")
+}
+
+// Órdenes de Producción
+model ProductionOrder {
+  id          String           @id @default(cuid())
+  orderNumber String           @unique
+  salesOrderId String?
+  userId      String
+  status      String           @default("PENDING")
+  priority    String           @default("NORMAL")
+  startDate   DateTime?
+  endDate     DateTime?
+  completedDate DateTime?
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relaciones
+  salesOrder SalesOrder?    @relation(fields: [salesOrderId], references: [id])
+  user       User           @relation(fields: [userId], references: [id])
+  items      ProductionItem[]
+
+  @@map("production_orders")
+}
+
+// ProductionStatus values: PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+// Priority values: LOW, NORMAL, HIGH, URGENT
+
+// Items de Órdenes de Producción
+model ProductionItem {
+  id                String  @id @default(cuid())
+  productionOrderId String
+  materialId        String?
+  productId         String?
+  quantity          Int
+  unitCost          Decimal @default(0)
+  totalCost         Decimal @default(0)
+  isOutput          Boolean @default(false) // true = producto terminado, false = materia prima
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relaciones
+  productionOrder ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  material        Material?       @relation(fields: [materialId], references: [id])
+  product         Product?        @relation(fields: [productId], references: [id])
+
+  @@map("production_items")
+}
+
+// Movimientos de Inventario
+model InventoryMovement {
+  id          String            @id @default(cuid())
+  materialId  String
+  type        String
+  quantity    Int
+  unitCost    Decimal
+  totalCost   Decimal
+  reference   String? // Número de orden relacionada
+  notes       String?
+  createdAt   DateTime          @default(now())
+
+  // Relaciones
+  material Material @relation(fields: [materialId], references: [id])
+
+  @@map("inventory_movements")
+}
+
+// MovementType values: IN, OUT, ADJUSTMENT, TRANSFER
+
+// Configuración del Sistema
+model SystemConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}

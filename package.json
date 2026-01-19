@@ -1,0 +1,32 @@
+{
+  "name": "erp-textil",
+  "version": "1.0.0",
+  "description": "ERP interno para planta textil",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "erp",
+    "textil",
+    "manufacturing",
+    "inventory"
+  ],
+  "author": "Tu Empresa",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.16",
+    "@tailwindcss/vite": "^4.1.16",
+    "express": "^5.1.0",
+    "mysql2": "^3.15.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.16"
+  }
+}
