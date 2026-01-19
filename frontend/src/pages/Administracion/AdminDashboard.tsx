@@ -181,7 +181,7 @@ const AdminDashboard: React.FC = () => {
             key={metric.id} 
             metric={{
               id: metric.id,
-              name: metric.title,
+              title: metric.title,
               value: metric.value,
               unit: metric.unit,
               trend: metric.trend as "up" | "down" | "stable",
