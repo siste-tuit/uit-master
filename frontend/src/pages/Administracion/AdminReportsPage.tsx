@@ -1,54 +1,100 @@
-import React from 'react';
-import { financialChartData, inventoryChartData, productionChartData } from '../../data/mockData';
+import React, { useEffect, useMemo, useState } from 'react';
+import API_BASE_URL_CORE from '../../config/api';
 // Nota: cuando integremos gráficos reales, importaremos los componentes de chartjs
 
 const AdminReportsPage: React.FC = () => {
-  const productionData = {
-    labels: productionChartData.map((d) => d.date),
+  const [produccionPeriodo, setProduccionPeriodo] = useState<any[]>([]);
+  const [registrosFinancieros, setRegistrosFinancieros] = useState<any[]>([]);
+  const [inventarioResumen, setInventarioResumen] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const token = localStorage.getItem('erp_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    const fetchJson = async (url: string) => {
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error(`Error ${res.status} en ${url}`);
+      return res.json();
+    };
+
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const results = await Promise.allSettled([
+          fetchJson(`${API_BASE_URL_CORE}/produccion/periodo?periodo=diaria`),
+          fetchJson(`${API_BASE_URL_CORE}/contabilidad/registros?limit=200`),
+          fetchJson(`${API_BASE_URL_CORE}/inventario/resumen-departamentos`)
+        ]);
+
+        if (!isMounted) return;
+
+        if (results[0].status === 'fulfilled') setProduccionPeriodo(results[0].value?.datos || []);
+        if (results[1].status === 'fulfilled') setRegistrosFinancieros(results[1].value || []);
+        if (results[2].status === 'fulfilled') setInventarioResumen(results[2].value);
+      } catch (err: any) {
+        if (!isMounted) return;
+        setError(err.message || 'Error al cargar reportes');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    cargarDatos();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const productionData = useMemo(() => ({
+    labels: produccionPeriodo.map((d) => d.date),
     datasets: [
       {
-        label: 'Hilado',
-        data: productionChartData.map((d) => d.hilado),
+        label: 'Producción',
+        data: produccionPeriodo.map((d) => d.production),
         borderColor: '#1A5632',
         backgroundColor: 'rgba(26, 86, 50, 0.15)',
         tension: 0.3,
-      },
-      {
-        label: 'Tejido',
-        data: productionChartData.map((d) => d.tejido),
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16, 185, 129, 0.15)',
-        tension: 0.3,
-      },
+      }
     ],
-  } as const;
+  }), [produccionPeriodo]);
 
-  const financesData = {
-    labels: financialChartData.map((d) => d.month),
-    datasets: [
-      {
-        label: 'Ingresos',
-        data: financialChartData.map((d) => d.ingresos),
-        backgroundColor: '#10B981',
-      },
-      {
-        label: 'Egresos',
-        data: financialChartData.map((d) => d.egresos),
-        backgroundColor: '#EF4444',
-      },
-    ],
-  } as const;
+  const financesData = useMemo(() => {
+    const buckets: Record<string, { ingresos: number; egresos: number }> = {};
+    registrosFinancieros.forEach((r: any) => {
+      const fecha = r.fecha;
+      if (!fecha) return;
+      const key = new Date(fecha).toISOString().slice(0, 7);
+      if (!buckets[key]) buckets[key] = { ingresos: 0, egresos: 0 };
+      if (r.tipo === 'ingreso') buckets[key].ingresos += Number(r.monto || 0);
+      if (r.tipo === 'egreso' || r.tipo === 'gasto') buckets[key].egresos += Number(r.monto || 0);
+    });
+    const labels = Object.keys(buckets).sort().slice(-6);
+    return {
+      labels,
+      datasets: [
+        { label: 'Ingresos', data: labels.map((l) => buckets[l].ingresos), backgroundColor: '#10B981' },
+        { label: 'Egresos', data: labels.map((l) => buckets[l].egresos), backgroundColor: '#EF4444' }
+      ]
+    };
+  }, [registrosFinancieros]);
 
-  const inventoryData = {
-    labels: inventoryChartData.map((d) => d.name),
+  const inventoryData = useMemo(() => ({
+    labels: ['Ingeniería', 'Mantenimiento'],
     datasets: [
       {
         label: 'Distribución',
-        data: inventoryChartData.map((d) => d.value),
-        backgroundColor: inventoryChartData.map((d) => d.color),
+        data: [
+          Number(inventarioResumen?.ingenieria?.stockTotal || 0),
+          Number(inventarioResumen?.mantenimiento?.stockTotal || 0)
+        ],
+        backgroundColor: ['#1A5632', '#3B82F6'],
       },
     ],
-  } as const;
+  }), [inventarioResumen]);
 
   return (
     <div className="p-6">
@@ -56,6 +102,15 @@ const AdminReportsPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-800">📈 Reportes y Análisis</h1>
         <p className="text-gray-600">KPIs y tendencias para la toma de decisiones.</p>
       </div>
+
+      {loading && (
+        <div className="text-center py-8 text-gray-600">Cargando reportes...</div>
+      )}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+          ❌ {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">

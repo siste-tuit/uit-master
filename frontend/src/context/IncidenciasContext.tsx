@@ -37,12 +37,16 @@ export const IncidenciasProvider = ({ children }: { children: ReactNode }) => {
     const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('erp_token');
+        return token ? { Authorization: `Bearer ${token}` } : undefined;
+    };
 
     // 🔄 Obtener todas las incidencias
     const fetchIncidencias = async () => {
         try {
             setLoading(true);
-            const res = await fetch(API_URL);
+            const res = await fetch(API_URL, { headers: getAuthHeaders() });
             if (!res.ok) throw new Error("Error al obtener incidencias");
             const data = await res.json();
             setIncidencias(data);
@@ -59,7 +63,10 @@ export const IncidenciasProvider = ({ children }: { children: ReactNode }) => {
             setLoading(true);
             const res = await fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    ...getAuthHeaders(),
+                },
                 body: JSON.stringify(data),
             });
             if (!res.ok) throw new Error("Error al crear incidencia");
@@ -77,7 +84,10 @@ export const IncidenciasProvider = ({ children }: { children: ReactNode }) => {
             setLoading(true);
             const res = await fetch(`${API_URL}/${id}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    ...getAuthHeaders(),
+                },
                 body: JSON.stringify(data),
             });
             if (!res.ok) throw new Error("Error al actualizar incidencia");
@@ -93,7 +103,10 @@ export const IncidenciasProvider = ({ children }: { children: ReactNode }) => {
     const deleteIncidencia = async (id: string) => {
         try {
             setLoading(true);
-            const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+            const res = await fetch(`${API_URL}/${id}`, {
+                method: "DELETE",
+                headers: getAuthHeaders(),
+            });
             if (!res.ok) throw new Error("Error al eliminar incidencia");
             setIncidencias((prev) => prev.filter((i) => i.id !== id));
         } catch (err: any) {

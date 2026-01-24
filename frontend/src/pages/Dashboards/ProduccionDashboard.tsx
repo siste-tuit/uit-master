@@ -1,43 +1,131 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getDashboardMetrics, productionLines, productionRecords } from '../../data/mockData';
+import API_BASE_URL_CORE from '../../config/api';
 import { formatNumber, formatDateTime } from '../../utils/helpers';
+
+interface ProduccionRegistro {
+  id: string;
+  fecha?: string;
+  timestamp?: string;
+  linea_id?: string;
+  linea_nombre?: string;
+  producto: string;
+  cantidad: number;
+  cantidad_defectuosa?: number;
+  estado: string;
+  calidad?: string;
+  feedback?: string | null;
+}
+
+interface LineaProduccion {
+  id: string;
+  nombre: string;
+  status?: string;
+  usuarios: string[];
+}
+
+interface MiProduccionData {
+  metricas?: {
+    totalProducido: number;
+    totalOrdenes: number;
+  };
+  registros?: ProduccionRegistro[];
+}
 
 const ProduccionDashboard: React.FC = () => {
   const { user } = useAuth();
-  const metrics = getDashboardMetrics('usuarios');
-  const [productionForm, setProductionForm] = useState({
-    product: '',
-    quantity: '',
-    line: '',
-    quality: 'buena',
-    notes: ''
-  });
+  const [data, setData] = useState<MiProduccionData | null>(null);
+  const [lineas, setLineas] = useState<LineaProduccion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Obtener líneas asignadas al usuario
-  const assignedLines = productionLines.filter(line => 
-    line.assignedUsers.includes(user?.id || '')
+  useEffect(() => {
+    let isMounted = true;
+    const token = localStorage.getItem('erp_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    const fetchJson = async (url: string) => {
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error(`Error ${res.status} al cargar datos`);
+      return res.json();
+    };
+
+    const cargarDatos = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        const results = await Promise.allSettled([
+          fetchJson(`${API_BASE_URL_CORE}/produccion/mi-produccion?usuario_id=${user.id}`),
+          fetchJson(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`)
+        ]);
+
+        if (!isMounted) return;
+
+        if (results[0].status === 'fulfilled') setData(results[0].value || null);
+        if (results[1].status === 'fulfilled') setLineas(results[1].value?.lineas || []);
+
+        if (results.every(r => r.status === 'rejected')) {
+          setError('No se pudieron cargar los datos de producción');
+        }
+      } catch (err: any) {
+        if (!isMounted) return;
+        setError(err.message || 'Error al cargar datos de producción');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    cargarDatos();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
+
+  const registros = data?.registros || [];
+  const metricas = data?.metricas || { totalProducido: 0, totalOrdenes: 0 };
+
+  const assignedLines = useMemo(() => {
+    if (!user?.name && !user?.email) return [];
+    const nombre = user?.name?.toLowerCase() || '';
+    const email = user?.email?.toLowerCase() || '';
+    return lineas.filter(linea =>
+      linea.usuarios?.some(u => u.toLowerCase() === nombre || u.toLowerCase() === email)
+    );
+  }, [lineas, user?.name, user?.email]);
+
+  const metrics = useMemo(
+    () => [
+      {
+        id: 'producido',
+        title: 'Total producido',
+        value: metricas.totalProducido || 0,
+        unit: 'unidades',
+        trend: 'stable' as const,
+        percentage: 0
+      },
+      {
+        id: 'ordenes',
+        title: 'Órdenes recibidas',
+        value: metricas.totalOrdenes || 0,
+        unit: 'ordenes',
+        trend: 'stable' as const,
+        percentage: 0
+      },
+      {
+        id: 'registros',
+        title: 'Registros enviados',
+        value: registros.length,
+        unit: 'reportes',
+        trend: 'stable' as const,
+        percentage: 0
+      }
+    ],
+    [metricas.totalProducido, metricas.totalOrdenes, registros.length]
   );
-
-  // Obtener registros del usuario
-  const userRecords = productionRecords.filter(record => 
-    record.userId === user?.id
-  );
-
-  const handleProductionSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simular envío de datos
-    alert('Producción registrada exitosamente');
-    setProductionForm({ product: '', quantity: '', line: '', quality: 'buena', notes: '' });
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setProductionForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -67,6 +155,50 @@ const ProduccionDashboard: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="gradient-header">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-3">Dashboard de Producción</h1>
+              <p className="text-uit-green-100 text-lg">
+                Registra tu producción diaria y supervisa tu progreso
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="uit-card">
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+            <p className="mt-4 text-gray-600">Cargando datos de producción...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="gradient-header">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-3">Dashboard de Producción</h1>
+              <p className="text-uit-green-100 text-lg">
+                Registra tu producción diaria y supervisa tu progreso
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-red-800 font-medium">❌ Error al cargar datos</p>
+          <p className="text-red-600 mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header del Dashboard */}
@@ -84,7 +216,7 @@ const ProduccionDashboard: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                <span className="text-sm text-uit-green-100">Órdenes Completadas: {userRecords.length}</span>
+                <span className="text-sm text-uit-green-100">Órdenes Completadas: {metricas.totalOrdenes || 0}</span>
               </div>
             </div>
           </div>
@@ -133,107 +265,11 @@ const ProduccionDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Formulario de registro de producción */}
       <div className="uit-card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Registrar Nueva Producción</h2>
-        <form onSubmit={handleProductionSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Producto
-              </label>
-              <select
-                name="product"
-                value={productionForm.product}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uit-green-500 focus:border-transparent"
-                required
-              >
-                <option value="">Seleccionar producto</option>
-                <option value="hilo-algodon-40-1">Hilo de Algodón 40/1</option>
-                <option value="tela-algodon-100">Tela de Algodón 100%</option>
-                <option value="tela-teñida-azul">Tela Teñida Azul</option>
-                <option value="camiseta-basica">Camiseta Básica</option>
-                <option value="pantalon-jean">Pantalón Jean</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cantidad
-              </label>
-              <input
-                type="number"
-                name="quantity"
-                value={productionForm.quantity}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uit-green-500 focus:border-transparent"
-                placeholder="Ej: 100"
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Línea de Producción
-              </label>
-              <select
-                name="line"
-                value={productionForm.line}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uit-green-500 focus:border-transparent"
-                required
-              >
-                <option value="">Seleccionar línea</option>
-                {assignedLines.map((line) => (
-                  <option key={line.id} value={line.id}>
-                    {line.name} - {line.type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Calidad
-              </label>
-              <select
-                name="quality"
-                value={productionForm.quality}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uit-green-500 focus:border-transparent"
-              >
-                <option value="excelente">Excelente</option>
-                <option value="buena">Buena</option>
-                <option value="regular">Regular</option>
-                <option value="mala">Mala</option>
-              </select>
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notas (opcional)
-            </label>
-            <textarea
-              name="notes"
-              value={productionForm.notes}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-uit-green-500 focus:border-transparent"
-              rows={3}
-              placeholder="Observaciones sobre la producción..."
-            />
-          </div>
-          
-          <button
-            type="submit"
-            className="uit-button-primary w-full md:w-auto"
-          >
-            🏭 Registrar Producción
-          </button>
-        </form>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Registro de Producción</h2>
+        <p className="text-sm text-gray-600">
+          El registro se realiza en el módulo <strong>Mi Producción</strong> para mantener datos 100% reales.
+        </p>
       </div>
 
       {/* Historial de producción */}
@@ -264,10 +300,10 @@ const ProduccionDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {userRecords.map((record) => (
+              {registros.map((record) => (
                 <tr key={record.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDateTime(record.timestamp)}
+                    {formatDateTime(record.fecha || record.timestamp || '')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {record.product}
@@ -277,7 +313,7 @@ const ProduccionDashboard: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`font-medium ${getQualityColor(record.quality)}`}>
-                      {record.quality.charAt(0).toUpperCase() + record.quality.slice(1)}
+                      {(record.quality || 'buena').charAt(0).toUpperCase() + (record.quality || 'buena').slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -290,6 +326,13 @@ const ProduccionDashboard: React.FC = () => {
                   </td>
                 </tr>
               ))}
+              {registros.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
+                    No hay registros de producción disponibles.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -300,7 +343,7 @@ const ProduccionDashboard: React.FC = () => {
         {assignedLines.map((line) => (
           <div key={line.id} className="uit-card">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">{line.name}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{line.nombre}</h3>
               <span className={`w-3 h-3 rounded-full ${
                 line.status === 'activa' ? 'bg-green-500' : 
                 line.status === 'mantenimiento' ? 'bg-yellow-500' : 'bg-red-500'
@@ -309,28 +352,9 @@ const ProduccionDashboard: React.FC = () => {
             
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Capacidad:</span>
-                <span className="text-sm font-medium">{line.capacity} unidades</span>
+                <span className="text-sm text-gray-600">Usuarios:</span>
+                <span className="text-sm font-medium">{line.usuarios?.length || 0}</span>
               </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Producción Actual:</span>
-                <span className="text-sm font-medium">{line.currentProduction} unidades</span>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Eficiencia:</span>
-                  <span className="text-sm font-medium text-green-600">{line.efficiency}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-uit-green-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${line.efficiency}%` }}
-                  ></div>
-                </div>
-              </div>
-              
               <div className="pt-2 border-t border-gray-200">
                 <span className="text-xs text-gray-500">
                   Estado: {line.status.charAt(0).toUpperCase() + line.status.slice(1)}
@@ -339,6 +363,11 @@ const ProduccionDashboard: React.FC = () => {
             </div>
           </div>
         ))}
+        {assignedLines.length === 0 && (
+          <div className="uit-card md:col-span-2">
+            <p className="text-sm text-gray-500">No hay líneas asignadas registradas para este usuario.</p>
+          </div>
+        )}
       </div>
     </div>
   );

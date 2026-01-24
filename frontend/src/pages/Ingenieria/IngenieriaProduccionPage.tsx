@@ -45,23 +45,6 @@ interface UsuarioProduccion {
   lineas_asignadas: string | null;
 }
 
-// Lista estática de los 13 usuarios de producción (fallback si el backend no responde)
-const USUARIOS_PRODUCCION_ESTATICOS: Omit<UsuarioProduccion, 'id' | 'linea_id' | 'linea_nombre' | 'lineas_asignadas'>[] = [
-  { email: 'AyC@textil.com', nombre_completo: 'Ana García', avatar: null },
-  { email: 'AyC2@textil.com', nombre_completo: 'Carlos Mendoza', avatar: null },
-  { email: 'AyC3@textil.com', nombre_completo: 'Carmen Torres', avatar: null },
-  { email: 'AyC4@textil.com', nombre_completo: 'Carmen Vega', avatar: null },
-  { email: 'DyM@textil.com', nombre_completo: 'Fernando Díaz', avatar: null },
-  { email: 'Elenatex@textil.com', nombre_completo: 'Juan Pérez', avatar: null },
-  { email: 'Emanuel@textil.com', nombre_completo: 'Luis Sánchez', avatar: null },
-  { email: 'Emanuel2@textil.com', nombre_completo: 'María López', avatar: null },
-  { email: 'JflStyle@textil.com', nombre_completo: 'Miguel Herrera', avatar: null },
-  { email: 'Juanazea@textil.com', nombre_completo: 'Patricia López', avatar: null },
-  { email: 'Myl@textil.com', nombre_completo: 'Pedro Martínez', avatar: null },
-  { email: 'Myl2@textil.com', nombre_completo: 'Roberto Torres', avatar: null },
-  { email: 'Velasquez@textil.com', nombre_completo: 'Sandra Morales', avatar: null },
-];
-
 const IngenieriaProduccionPage: React.FC = () => {
   const { user } = useAuth();
   const isReadOnly = user?.role === 'gerencia';
@@ -90,7 +73,10 @@ const IngenieriaProduccionPage: React.FC = () => {
     const fetchLineas = async () => {
       try {
         setLoadingLineas(true);
-        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`);
+        const token = localStorage.getItem('erp_token');
+        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
         if (response.ok) {
           const data = await response.json();
           console.log('📊 Líneas recibidas del backend:', data.lineas.length);
@@ -116,83 +102,24 @@ const IngenieriaProduccionPage: React.FC = () => {
         setLoadingUsuarios(true);
         const token = localStorage.getItem('erp_token');
         
-        try {
-          const response = await fetch(`${API_BASE_URL_CORE}/reportes-produccion/usuarios-produccion`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
+        const response = await fetch(`${API_BASE_URL_CORE}/reportes-produccion/usuarios-produccion`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-          if (response.ok) {
-            const data = await response.json();
-            console.log('👥 Usuarios de producción recibidos del backend:', data.usuarios?.length || 0);
-            
-            // Filtrar solo los 13 usuarios de producción
-            const correosPermitidos = [
-              'AyC@textil.com', 'AyC2@textil.com', 'AyC3@textil.com', 'AyC4@textil.com',
-              'DyM@textil.com', 'Elenatex@textil.com', 'Emanuel@textil.com', 'Emanuel2@textil.com',
-              'JflStyle@textil.com', 'Juanazea@textil.com', 'Myl@textil.com', 'Myl2@textil.com',
-              'Velasquez@textil.com'
-            ];
-            
-            const usuariosFiltrados = (data.usuarios || []).filter((u: UsuarioProduccion) => 
-              correosPermitidos.includes(u.email)
-            );
-            
-            // Combinar con usuarios estáticos para asegurar que siempre tengamos todos
-            const usuariosCombinados = correosPermitidos.map(correo => {
-              const usuarioBackend = usuariosFiltrados.find((u: UsuarioProduccion) => u.email === correo);
-              const usuarioEstatico = USUARIOS_PRODUCCION_ESTATICOS.find(u => u.email === correo);
-              
-              return usuarioBackend || {
-                id: `static-${correo}`, // ID temporal para usuarios estáticos
-                email: correo,
-                nombre_completo: usuarioEstatico?.nombre_completo || correo,
-                avatar: null,
-                linea_id: null,
-                linea_nombre: null,
-                lineas_asignadas: null
-              };
-            });
-            
-            setUsuariosProduccion(usuariosCombinados);
-            console.log('✅ Usuarios cargados:', usuariosCombinados.length);
-          } else {
-            console.warn('⚠️ Error al cargar usuarios del backend, usando lista estática');
-            // Usar lista estática como fallback
-            const usuariosEstaticosCompletos = USUARIOS_PRODUCCION_ESTATICOS.map((u, index) => ({
-              ...u,
-              id: `static-${index}`,
-              linea_id: null,
-              linea_nombre: null,
-              lineas_asignadas: null
-            }));
-            setUsuariosProduccion(usuariosEstaticosCompletos);
-          }
-        } catch (fetchError) {
-          console.warn('⚠️ Error de conexión con el backend, usando lista estática:', fetchError);
-          // Usar lista estática como fallback
-          const usuariosEstaticosCompletos = USUARIOS_PRODUCCION_ESTATICOS.map((u, index) => ({
-            ...u,
-            id: `static-${index}`,
-            linea_id: null,
-            linea_nombre: null,
-            lineas_asignadas: null
-          }));
-          setUsuariosProduccion(usuariosEstaticosCompletos);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('👥 Usuarios de producción recibidos del backend:', data.usuarios?.length || 0);
+          setUsuariosProduccion(data.usuarios || []);
+        } else {
+          console.warn('⚠️ Error al cargar usuarios del backend:', response.status);
+          setUsuariosProduccion([]);
         }
       } catch (error) {
         console.error('❌ Error general al cargar usuarios:', error);
-        // Fallback a lista estática
-        const usuariosEstaticosCompletos = USUARIOS_PRODUCCION_ESTATICOS.map((u, index) => ({
-          ...u,
-          id: `static-${index}`,
-          linea_id: null,
-          linea_nombre: null,
-          lineas_asignadas: null
-        }));
-        setUsuariosProduccion(usuariosEstaticosCompletos);
+        setUsuariosProduccion([]);
       } finally {
         setLoadingUsuarios(false);
       }

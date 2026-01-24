@@ -1,11 +1,59 @@
-import React from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { getDashboardMetrics, financialChartData, financialRecords, inventoryItems } from '../../data/mockData';
+import React, { useEffect, useMemo, useState } from 'react';
+import API_BASE_URL_CORE from '../../config/api';
 import { formatCurrency, formatDate } from '../../utils/helpers';
+
+interface MetricasFinancieras {
+  ingresos: number;
+  egresos: number;
+  gastos: number;
+  utilidad: number;
+  cambioIngresos: number;
+}
+
+interface IngresosMensuales {
+  ingresosMensuales: number;
+  cambioPorcentaje: number;
+  mesActual: number;
+  añoActual: number;
+}
+
+interface InventarioResumen {
+  ingenieria?: {
+    totalItems: number;
+    porcentajeStock: number;
+    stockTotal: number;
+    stockMaximoTotal: number;
+  };
+  mantenimiento?: {
+    totalItems: number;
+    porcentajeStock: number;
+    stockTotal: number;
+    stockMaximoTotal: number;
+  };
+}
+
+interface RegistroFinanciero {
+  id: string;
+  tipo: 'ingreso' | 'egreso' | 'gasto';
+  categoria: string;
+  monto: number;
+  descripcion: string | null;
+  fecha: string;
+  status: 'pendiente' | 'aprobado' | 'rechazado';
+}
 // Componente de gráfico de barras simple
-const SimpleBarChart: React.FC<{ data: any[], dataKey: string, color: string, title: string }> = ({ data, dataKey, color, title }) => {
-  const maxValue = Math.max(...data.map(item => item[dataKey]));
-  
+const SimpleBarChart: React.FC<{ data: any[]; dataKey: string; color: string; title: string }> = ({ data, dataKey, color, title }) => {
+  if (!data.length) {
+    return (
+      <div className="bg-white rounded-lg p-4 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
+        <p className="text-sm text-gray-500">Sin datos disponibles.</p>
+      </div>
+    );
+  }
+
+  const maxValue = Math.max(1, ...data.map(item => Number(item[dataKey] || 0)));
+
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm">
       <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>
@@ -14,9 +62,9 @@ const SimpleBarChart: React.FC<{ data: any[], dataKey: string, color: string, ti
           <div key={index} className="flex items-center space-x-3">
             <div className="w-20 text-sm text-gray-600 truncate">{item.name}</div>
             <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
-              <div 
+              <div
                 className={`h-6 rounded-full ${color}`}
-                style={{ width: `${(item[dataKey] / maxValue) * 100}%` }}
+                style={{ width: `${(Number(item[dataKey] || 0) / maxValue) * 100}%` }}
               ></div>
               <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700">
                 {formatCurrency(item[dataKey])}
@@ -30,26 +78,142 @@ const SimpleBarChart: React.FC<{ data: any[], dataKey: string, color: string, ti
 };
 
 const ContabilidadDashboard: React.FC = () => {
-  const { user } = useAuth();
-  const metrics = getDashboardMetrics('contabilidad');
+  const [metricas, setMetricas] = useState<MetricasFinancieras>({
+    ingresos: 0,
+    egresos: 0,
+    gastos: 0,
+    utilidad: 0,
+    cambioIngresos: 0
+  });
+  const [ingresosMensuales, setIngresosMensuales] = useState<IngresosMensuales | null>(null);
+  const [resumenInventario, setResumenInventario] = useState<InventarioResumen | null>(null);
+  const [registros, setRegistros] = useState<RegistroFinanciero[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Calcular totales financieros
-  const totalIngresos = financialRecords
-    .filter(record => record.type === 'ingreso' && record.status === 'aprobado')
-    .reduce((sum, record) => sum + record.amount, 0);
+  useEffect(() => {
+    let isMounted = true;
+    const token = localStorage.getItem('erp_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-  const totalEgresos = financialRecords
-    .filter(record => record.type === 'egreso' && record.status === 'aprobado')
-    .reduce((sum, record) => sum + record.amount, 0);
+    const fetchJson = async (url: string) => {
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error(`Error ${res.status} en ${url}`);
+      return res.json();
+    };
 
-  const totalGastos = financialRecords
-    .filter(record => record.type === 'gasto' && record.status === 'aprobado')
-    .reduce((sum, record) => sum + record.amount, 0);
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const results = await Promise.allSettled([
+          fetchJson(`${API_BASE_URL_CORE}/contabilidad/metricas`),
+          fetchJson(`${API_BASE_URL_CORE}/contabilidad/ingresos-mensuales`),
+          fetchJson(`${API_BASE_URL_CORE}/inventario/resumen-departamentos`),
+          fetchJson(`${API_BASE_URL_CORE}/contabilidad/registros?limit=10`)
+        ]);
 
-  const utilidadNeta = totalIngresos - totalEgresos - totalGastos;
+        if (!isMounted) return;
 
-  // Calcular valor del inventario
-  const valorInventario = inventoryItems.reduce((sum, item) => sum + (item.currentStock * item.cost), 0);
+        if (results[0].status === 'fulfilled') setMetricas(results[0].value);
+        if (results[1].status === 'fulfilled') setIngresosMensuales(results[1].value);
+        if (results[2].status === 'fulfilled') setResumenInventario(results[2].value);
+        if (results[3].status === 'fulfilled') setRegistros(results[3].value || []);
+      } catch (err: any) {
+        if (!isMounted) return;
+        setError(err.message || 'Error al cargar datos');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    cargarDatos();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const chartData = useMemo(() => {
+    if (!ingresosMensuales) return [];
+    const monthLabel = new Date(ingresosMensuales.añoActual, ingresosMensuales.mesActual - 1, 1).toLocaleDateString('es-ES', {
+      month: 'short',
+      year: 'numeric'
+    });
+    return [
+      {
+        name: monthLabel,
+        ingresos: ingresosMensuales.ingresosMensuales,
+        egresos: metricas.egresos,
+        utilidad: metricas.utilidad
+      }
+    ];
+  }, [ingresosMensuales, metricas.egresos, metricas.utilidad]);
+
+  const totalIngresos = metricas.ingresos || 0;
+  const totalEgresos = metricas.egresos || 0;
+  const totalGastos = metricas.gastos || 0;
+  const utilidadNeta = metricas.utilidad || 0;
+
+  const stockInventarioTotal =
+    (resumenInventario?.ingenieria?.stockTotal || 0) +
+    (resumenInventario?.mantenimiento?.stockTotal || 0);
+
+  const metrics = [
+    {
+      id: 'ingresos',
+      title: 'Ingresos',
+      value: totalIngresos,
+      unit: '',
+      trend: metricas.cambioIngresos > 0 ? 'up' : metricas.cambioIngresos < 0 ? 'down' : 'stable',
+      percentage: Math.abs(metricas.cambioIngresos || 0)
+    },
+    {
+      id: 'egresos',
+      title: 'Egresos',
+      value: totalEgresos,
+      unit: '',
+      trend: 'stable',
+      percentage: 0
+    },
+    {
+      id: 'gastos',
+      title: 'Gastos',
+      value: totalGastos,
+      unit: '',
+      trend: 'stable',
+      percentage: 0
+    },
+    {
+      id: 'utilidad',
+      title: 'Utilidad',
+      value: utilidadNeta,
+      unit: '',
+      trend: 'stable',
+      percentage: 0
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+          <p className="mt-4 text-gray-600">Cargando datos de Contabilidad...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-red-800 font-medium">❌ Error al cargar datos</p>
+          <p className="text-red-600 mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -68,7 +232,7 @@ const ContabilidadDashboard: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                <span className="text-sm text-uit-green-100">Valor Inventario: {formatCurrency(valorInventario)}</span>
+                <span className="text-sm text-uit-green-100">Stock total: {stockInventarioTotal.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -119,23 +283,23 @@ const ContabilidadDashboard: React.FC = () => {
 
       {/* Gráfico de rendimiento financiero */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SimpleBarChart 
-          data={financialChartData.map(item => ({ name: item.month, ingresos: item.ingresos }))}
+        <SimpleBarChart
+          data={chartData.map(item => ({ name: item.name, ingresos: item.ingresos }))}
           dataKey="ingresos"
           color="bg-green-500"
-          title="Ingresos por Mes"
+          title="Ingresos del Mes"
         />
-        <SimpleBarChart 
-          data={financialChartData.map(item => ({ name: item.month, egresos: item.egresos }))}
+        <SimpleBarChart
+          data={chartData.map(item => ({ name: item.name, egresos: item.egresos }))}
           dataKey="egresos"
           color="bg-red-500"
-          title="Egresos por Mes"
+          title="Egresos del Mes"
         />
-        <SimpleBarChart 
-          data={financialChartData.map(item => ({ name: item.month, utilidad: item.utilidad }))}
+        <SimpleBarChart
+          data={chartData.map(item => ({ name: item.name, utilidad: item.utilidad }))}
           dataKey="utilidad"
           color="bg-blue-500"
-          title="Utilidad por Mes"
+          title="Utilidad del Mes"
         />
       </div>
 
@@ -181,22 +345,35 @@ const ContabilidadDashboard: React.FC = () => {
         <div className="uit-card">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Estado del Inventario</h2>
           <div className="space-y-4">
-            {inventoryItems.slice(0, 4).map((item) => (
+            {[
+              {
+                id: 'ingenieria',
+                nombre: 'Ingeniería',
+                stockTotal: resumenInventario?.ingenieria?.stockTotal || 0,
+                porcentaje: resumenInventario?.ingenieria?.porcentajeStock || 0
+              },
+              {
+                id: 'mantenimiento',
+                nombre: 'Mantenimiento',
+                stockTotal: resumenInventario?.mantenimiento?.stockTotal || 0,
+                porcentaje: resumenInventario?.mantenimiento?.porcentajeStock || 0
+              }
+            ].map((item) => (
               <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">{item.name}</p>
-                  <p className="text-sm text-gray-600">{item.category}</p>
+                  <p className="font-medium text-gray-900">{item.nombre}</p>
+                  <p className="text-sm text-gray-600">Stock total</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-900">{formatCurrency(item.cost * item.currentStock)}</p>
-                  <p className="text-sm text-gray-600">{item.currentStock} {item.unit}</p>
+                  <p className="font-semibold text-gray-900">{item.stockTotal.toLocaleString()}</p>
+                  <p className="text-sm text-gray-600">{item.porcentaje}%</p>
                 </div>
               </div>
             ))}
             <div className="pt-2 border-t border-gray-200">
               <div className="flex justify-between items-center">
-                <span className="font-semibold text-gray-900">Valor Total Inventario</span>
-                <span className="font-bold text-uit-green-600">{formatCurrency(valorInventario)}</span>
+                <span className="font-semibold text-gray-900">Stock total inventario</span>
+                <span className="font-bold text-uit-green-600">{stockInventarioTotal.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -231,28 +408,28 @@ const ContabilidadDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {financialRecords.map((record) => (
+              {registros.map((record) => (
                 <tr key={record.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(record.date)}
+                    {formatDate(record.fecha)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      record.type === 'ingreso' ? 'bg-green-100 text-green-800' :
-                      record.type === 'egreso' ? 'bg-red-100 text-red-800' :
+                      record.tipo === 'ingreso' ? 'bg-green-100 text-green-800' :
+                      record.tipo === 'egreso' ? 'bg-red-100 text-red-800' :
                       'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {record.type.charAt(0).toUpperCase() + record.type.slice(1)}
+                      {record.tipo.charAt(0).toUpperCase() + record.tipo.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {record.category}
+                    {record.categoria}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {record.description}
+                    {record.descripcion || 'Sin descripción'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {formatCurrency(record.amount)}
+                    {formatCurrency(record.monto)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -265,6 +442,13 @@ const ContabilidadDashboard: React.FC = () => {
                   </td>
                 </tr>
               ))}
+              {registros.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-6 text-center text-sm text-gray-500">
+                    No hay registros financieros recientes.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

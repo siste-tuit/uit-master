@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useConfiguracion } from '../context/ConfigContext';
-import { roleModules } from '../data/mockData';
+import { roleModules } from '../data/roleModules';
 
 interface SidebarProps {
   isOpen: boolean;

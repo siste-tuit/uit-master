@@ -25,22 +25,6 @@ interface FiltrosFlujoSalida {
   dia: string;
 }
 
-const lineasDisponibles = [
-  'A&C - CHINCHA GREEN',
-  'A&C 2 - CHINCHA GREEN',
-  'A&C 3 - CHINCHA GREEN',
-  'A&C 4 - CHINCHA GREEN',
-  'D&M - CHINCHA GREEN',
-  'ELENA TEX - CHINCHA GREEN',
-  'EMANUEL - CHINCHA GREEN',
-  'EMANUEL 2 - CHINCHA GREEN',
-  'JFL STYLE - CHINCHA GREEN',
-  'JUANA ZEA - CHINCHA GREEN',
-  'M&L - CHINCHA GREEN',
-  'M&L 2 - CHINCHA GREEN',
-  'VELASQUEZ - CHINCHA GREEN'
-];
-
 const meses = [
   { value: '01', label: 'Enero' },
   { value: '02', label: 'Febrero' },
@@ -105,6 +89,8 @@ const IngenieriaFichaSalidaPage: React.FC = () => {
   const [usuariosSistemas, setUsuariosSistemas] = useState<UsuarioSistemas[]>([]);
   const [usuarioSistemasSeleccionado, setUsuarioSistemasSeleccionado] = useState<string>('');
   const [loadingUsuarios, setLoadingUsuarios] = useState(true);
+  const [lineasDisponibles, setLineasDisponibles] = useState<string[]>([]);
+  const [loadingLineas, setLoadingLineas] = useState(true);
   const [enviando, setEnviando] = useState(false);
 
   const semanas = useMemo(
@@ -147,6 +133,31 @@ const IngenieriaFichaSalidaPage: React.FC = () => {
     };
 
     cargarUsuariosSistemas();
+  }, []);
+
+  useEffect(() => {
+    const cargarLineas = async () => {
+      try {
+        setLoadingLineas(true);
+        const token = localStorage.getItem('erp_token');
+        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setLineasDisponibles((data.lineas || []).map((l: any) => l.nombre));
+        } else {
+          setLineasDisponibles([]);
+        }
+      } catch (error) {
+        console.error('Error al cargar líneas:', error);
+        setLineasDisponibles([]);
+      } finally {
+        setLoadingLineas(false);
+      }
+    };
+
+    cargarLineas();
   }, []);
 
   const handleFiltroChange = (
@@ -354,6 +365,9 @@ const IngenieriaFichaSalidaPage: React.FC = () => {
                   </option>
                 ))}
               </select>
+              {loadingLineas && (
+                <p className="mt-1 text-xs text-gray-500">Cargando líneas...</p>
+              )}
             </div>
 
             <div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL_CORE from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 
 interface DocumentoHistorial {
@@ -15,43 +16,33 @@ const IngenieriaHistorialPage: React.FC = () => {
   const { user } = useAuth();
   const isReadOnly = user?.role === 'gerencia';
   const [documentos, setDocumentos] = useState<DocumentoHistorial[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filtroTiempo, setFiltroTiempo] = useState<'dia' | 'semana' | 'mes' | 'todos'>('todos');
   const [tipoFiltro, setTipoFiltro] = useState<'todos' | 'produccion' | 'reporte'>('todos');
 
-  // Cargar documentos del localStorage al montar
   useEffect(() => {
-    const cargarDocumentos = () => {
-      const documentosGuardados = localStorage.getItem('historial_documentos');
-      if (documentosGuardados) {
-        setDocumentos(JSON.parse(documentosGuardados));
+    const cargarDocumentos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const token = localStorage.getItem('erp_token');
+        const response = await fetch(`${API_BASE_URL_CORE}/reportes-produccion/historial`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el historial');
+        }
+        const data = await response.json();
+        setDocumentos(data.documentos || []);
+      } catch (err: any) {
+        setError(err.message || 'Error al cargar el historial');
+      } finally {
+        setLoading(false);
       }
     };
 
-    const handleGuardarDocumento = (event: Event) => {
-      console.log('Evento guardarDocumento recibido en Historial');
-      const customEvent = event as CustomEvent;
-      const nuevoDocumento: DocumentoHistorial = customEvent.detail;
-      console.log('Nuevo documento recibido:', nuevoDocumento);
-      setDocumentos(prev => {
-        // Evitar duplicados verificando si el documento ya existe
-        const yaExiste = prev.some(doc => doc.id === nuevoDocumento.id);
-        if (yaExiste) {
-          console.log('Documento ya existe en el historial:', nuevoDocumento.id);
-          return prev;
-        }
-        const updatedDocs = [...prev, nuevoDocumento];
-        console.log('Guardando documento en localStorage. Total:', updatedDocs.length);
-        localStorage.setItem('historial_documentos', JSON.stringify(updatedDocs));
-        return updatedDocs;
-      });
-    };
-
     cargarDocumentos();
-    window.addEventListener('guardarDocumento', handleGuardarDocumento);
-
-    return () => {
-      window.removeEventListener('guardarDocumento', handleGuardarDocumento);
-    };
   }, []);
 
   // Filtrar documentos
@@ -103,12 +94,7 @@ const IngenieriaHistorialPage: React.FC = () => {
     if (isReadOnly) {
       return;
     }
-    if (window.confirm('¿Estás seguro de eliminar este documento del historial?')) {
-      const nuevosDocumentos = documentos.filter(d => d.id !== id);
-      localStorage.setItem('historial_documentos', JSON.stringify(nuevosDocumentos));
-      setDocumentos(nuevosDocumentos);
-      alert('Documento eliminado exitosamente');
-    }
+    alert('La eliminación de documentos se gestiona desde el backend.');
   };
 
   const getTipoIcono = (tipo: string) => {
@@ -126,6 +112,27 @@ const IngenieriaHistorialPage: React.FC = () => {
   const totalDocumentos = documentos.length;
   const totalProduccion = documentos.filter(d => d.tipo === 'produccion').length;
   const totalReportes = documentos.filter(d => d.tipo === 'reporte').length;
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+          <p className="mt-4 text-gray-600">Cargando historial...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">❌ {error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">

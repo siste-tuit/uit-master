@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { MetricCard } from '../../components/Cards';
 import { ProductionChart, EfficiencyChart } from '../../components/Charts';
-import { getDashboardMetrics, productionData } from '../../data/mockData';
 import API_BASE_URL_CORE from '../../config/api';
 
 const AdminDashboard: React.FC = () => {
@@ -24,13 +23,18 @@ const AdminDashboard: React.FC = () => {
     mantenimiento: { totalItems: 0, porcentajeStock: 0, stockTotal: 0, stockMaximoTotal: 0 }
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Obtener métricas de producción desde el backend
   useEffect(() => {
     const fetchMetricas = async () => {
       try {
         // Obtener métricas de producción
-        const prodResponse = await fetch(`${API_BASE_URL_CORE}/produccion/metricas`);
+        setError(null);
+        const token = localStorage.getItem('erp_token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+        const prodResponse = await fetch(`${API_BASE_URL_CORE}/produccion/metricas`, { headers });
         if (prodResponse.ok) {
           const prodData = await prodResponse.json();
           setMetricasProduccion(prodData);
@@ -39,7 +43,7 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Obtener métricas financieras (ingresos mensuales)
-        const finResponse = await fetch(`${API_BASE_URL_CORE}/contabilidad/ingresos-mensuales`);
+        const finResponse = await fetch(`${API_BASE_URL_CORE}/contabilidad/ingresos-mensuales`, { headers });
         if (finResponse.ok) {
           const finData = await finResponse.json();
           setMetricasFinancieras(finData);
@@ -48,7 +52,7 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Obtener datos de producción por período para gráficos
-        const prodPeriodoResponse = await fetch(`${API_BASE_URL_CORE}/produccion/periodo?periodo=${periodoGrafico}`);
+        const prodPeriodoResponse = await fetch(`${API_BASE_URL_CORE}/produccion/periodo?periodo=${periodoGrafico}`, { headers });
         if (prodPeriodoResponse.ok) {
           const prodPeriodoData = await prodPeriodoResponse.json();
           setDatosProduccionMensual(prodPeriodoData.datos || []);
@@ -57,15 +61,16 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Obtener resumen de inventario por departamentos
-        const inventarioResponse = await fetch(`${API_BASE_URL_CORE}/inventario/resumen-departamentos`);
+        const inventarioResponse = await fetch(`${API_BASE_URL_CORE}/inventario/resumen-departamentos`, { headers });
         if (inventarioResponse.ok) {
           const inventarioData = await inventarioResponse.json();
           setInventarioDepartamentos(inventarioData);
         } else {
           console.error('Error al obtener inventario por departamentos');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error al conectar con el backend:', error);
+        setError(error.message || 'Error al cargar datos');
       } finally {
         setLoading(false);
       }
@@ -77,57 +82,69 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [periodoGrafico]);
 
-  // Obtener métricas base y actualizar con datos reales
-  const baseMetrics = getDashboardMetrics('administrador');
-  
-  // Actualizar las métricas de producción, eficiencia y calidad con datos reales
-  const productionMetrics = baseMetrics.map(metric => {
-    if (metric.id === '1') { // Producción Diaria - muestra UNIDADES
-      return {
-        ...metric,
-        value: metricasProduccion.produccionDiaria || metric.value,
-        unit: 'unidades', // Asegurar que muestre "unidades"
-        percentage: metricasProduccion.cambioProduccion || metric.percentage,
-        trend: metricasProduccion.cambioProduccion > 0 ? 'up' : metricasProduccion.cambioProduccion < 0 ? 'down' : 'stable'
-      };
-    }
-    if (metric.id === '2') { // Eficiencia General - muestra PORCENTAJE
-      return {
-        ...metric,
-        value: metricasProduccion.eficienciaGeneral || metric.value,
-        unit: '%', // Asegurar que muestre "%"
-        percentage: metricasProduccion.cambioEficiencia || metric.percentage,
-        trend: metricasProduccion.cambioEficiencia > 0 ? 'up' : metricasProduccion.cambioEficiencia < 0 ? 'down' : 'stable'
-      };
-    }
-    if (metric.id === '3') { // Calidad - muestra PORCENTAJE
-      return {
-        ...metric,
-        value: metricasProduccion.calidad || metric.value,
-        unit: '%', // Asegurar que muestre "%"
-        percentage: metricasProduccion.cambioCalidad || metric.percentage,
-        trend: metricasProduccion.cambioCalidad > 0 ? 'up' : metricasProduccion.cambioCalidad < 0 ? 'down' : 'stable'
-      };
-    }
-    if (metric.id === '5') { // Ingresos Mensuales - muestra PEN
-      return {
-        ...metric,
-        value: metricasFinancieras.ingresosMensuales || metric.value,
+  const productionMetrics = useMemo(
+    () => [
+      {
+        id: 'produccion-diaria',
+        title: 'Producción diaria',
+        value: metricasProduccion.produccionDiaria || 0,
+        unit: 'unidades',
+        trend: metricasProduccion.cambioProduccion > 0 ? 'up' : metricasProduccion.cambioProduccion < 0 ? 'down' : 'stable',
+        percentage: Math.abs(metricasProduccion.cambioProduccion || 0),
+        color: 'text-green-600'
+      },
+      {
+        id: 'eficiencia',
+        title: 'Eficiencia general',
+        value: metricasProduccion.eficienciaGeneral || 0,
+        unit: '%',
+        trend: metricasProduccion.cambioEficiencia > 0 ? 'up' : metricasProduccion.cambioEficiencia < 0 ? 'down' : 'stable',
+        percentage: Math.abs(metricasProduccion.cambioEficiencia || 0),
+        color: 'text-blue-600'
+      },
+      {
+        id: 'calidad',
+        title: 'Calidad',
+        value: metricasProduccion.calidad || 0,
+        unit: '%',
+        trend: metricasProduccion.cambioCalidad > 0 ? 'up' : metricasProduccion.cambioCalidad < 0 ? 'down' : 'stable',
+        percentage: Math.abs(metricasProduccion.cambioCalidad || 0),
+        color: 'text-indigo-600'
+      },
+      {
+        id: 'ingresos',
+        title: 'Ingresos mensuales',
+        value: metricasFinancieras.ingresosMensuales || 0,
         unit: 'PEN',
-        percentage: metricasFinancieras.cambioPorcentaje || metric.percentage,
-        trend: metricasFinancieras.cambioPorcentaje > 0 ? 'up' : metricasFinancieras.cambioPorcentaje < 0 ? 'down' : 'stable'
-      };
-    }
-    return metric;
-  });
-  
-  // Datos para el gráfico de distribución de inventario
-  const inventoryDistributionData = [
-    { name: 'Hilos', value: 35, color: '#2E7D32' },
-    { name: 'Telas', value: 25, color: '#4CAF50' },
-    { name: 'Tintes', value: 20, color: '#66BB6A' },
-    { name: 'Accesorios', value: 20, color: '#81C784' }
-  ];
+        trend: metricasFinancieras.cambioPorcentaje > 0 ? 'up' : metricasFinancieras.cambioPorcentaje < 0 ? 'down' : 'stable',
+        percentage: Math.abs(metricasFinancieras.cambioPorcentaje || 0),
+        color: 'text-emerald-600'
+      }
+    ],
+    [metricasFinancieras, metricasProduccion]
+  );
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+          <p className="mt-4 text-gray-600">Cargando datos administrativos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-red-800 font-medium">❌ Error al cargar datos</p>
+          <p className="text-red-600 mt-2">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -232,14 +249,8 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ProductionChart 
-            data={datosProduccionMensual.length > 0 ? datosProduccionMensual : productionData} 
-            periodo={periodoGrafico}
-          />
-          <EfficiencyChart 
-            data={datosProduccionMensual.length > 0 ? datosProduccionMensual : productionData} 
-            periodo={periodoGrafico}
-          />
+          <ProductionChart data={datosProduccionMensual} periodo={periodoGrafico} />
+          <EfficiencyChart data={datosProduccionMensual} periodo={periodoGrafico} />
         </div>
       </div>
 

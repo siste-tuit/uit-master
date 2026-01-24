@@ -14,20 +14,6 @@ const loadImage = (src: string): Promise<HTMLImageElement | null> => {
   });
 };
 
-interface PedidoData {
-  cliente: string;
-  ficha: string;
-  estilo_cliente: string;
-  color: string;
-  cantidad: string;
-  linea_produccion: string;
-  operacion: string;
-  codigo_operacion: string;
-  fecha_envio: string;
-  fecha_recojo: string;
-  especificacion: string;
-}
-
 interface RegistroProduccion {
   id: string;
   fecha: string;
@@ -108,20 +94,6 @@ const UsuarioMiProduccionPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lineasProduccion, setLineasProduccion] = useState<LineaProduccion[]>([]);
   const [loadingLineas, setLoadingLineas] = useState(true);
-  const [formData, setFormData] = useState<PedidoData>({
-    cliente: '',
-    ficha: '',
-    estilo_cliente: '',
-    color: '',
-    cantidad: '',
-    linea_produccion: '',
-    operacion: '',
-    codigo_operacion: '',
-    fecha_envio: '',
-    fecha_recojo: '',
-    especificacion: ''
-  });
-
   // Estados para los modales
   const [showEnviarReporte, setShowEnviarReporte] = useState(false);
   const [loadingModales, setLoadingModales] = useState(false);
@@ -187,7 +159,10 @@ const UsuarioMiProduccionPage: React.FC = () => {
     const fetchLineas = async () => {
       try {
         setLoadingLineas(true);
-        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`);
+        const token = localStorage.getItem('erp_token');
+        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
         if (response.ok) {
           const data = await response.json();
           console.log('📊 Líneas recibidas del backend (Usuario Producción):', data.lineas.length);
@@ -324,14 +299,6 @@ const UsuarioMiProduccionPage: React.FC = () => {
       default:
         return estado;
     }
-  };
-
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
   };
 
   const handleReporteChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -791,7 +758,7 @@ const UsuarioMiProduccionPage: React.FC = () => {
           cantidad_producida: parseInt(reporteDiario.cantidad_producida) || 0,
           cantidad_defectuosa: parseInt(reporteDiario.cantidad_defectuosa) || 0,
           // Enviar la línea si fue seleccionada; el backend ya soporta linea_id para consolidar métricas
-          linea_id: reporteDiario.linea_produccion || formData.linea_produccion || null,
+          linea_id: reporteDiario.linea_produccion || null,
           // En observaciones, anexamos campos de organización para Ingeniería
           observaciones: (
             [
@@ -846,177 +813,6 @@ const UsuarioMiProduccionPage: React.FC = () => {
       alert(`Error: ${error.message || 'No se pudo enviar el reporte'}`);
     } finally {
       setLoadingModales(false);
-    }
-  };
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Datos del pedido:', formData);
-    // Aquí iría la lógica para guardar o enviar los datos
-    alert('Pedido guardado exitosamente');
-    // Limpiar el formulario después de guardar
-    setFormData({
-      cliente: '',
-      ficha: '',
-      estilo_cliente: '',
-      color: '',
-      cantidad: '',
-      linea_produccion: '',
-      operacion: '',
-      codigo_operacion: '',
-      fecha_envio: '',
-      fecha_recojo: '',
-      especificacion: ''
-    });
-  };
-
-  const handleGeneratePDF = async () => {
-    // Validar que hay datos
-    if (!formData.cliente || !formData.ficha || !formData.cantidad) {
-      alert('Por favor completa los campos obligatorios antes de generar el PDF');
-      return;
-    }
-
-    console.log('Iniciando generación de PDF...');
-
-    try {
-      // Crear nuevo documento PDF
-      const pdf = new jsPDF();
-      
-      // Configuración de estilos
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const margin = 20;
-      const lineHeight = 7;
-      let yPosition = margin;
-
-      // Encabezado
-      pdf.setFillColor(26, 86, 50); // Verde UIT
-      pdf.rect(0, 0, pageWidth, 45, 'F');
-      
-      // Cargar y agregar logo
-      try {
-        const logoImg = await loadImage('/assets/images/logos/arriba.png');
-        if (logoImg) {
-          // Calcular dimensiones del logo (más grande: 25px de alto)
-          const logoHeight = 25;
-          const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
-          
-          // Agregar fondo blanco redondeado
-          const logoX = margin + 3;
-          const logoY = 10;
-          const padding = 5;
-          
-          pdf.setFillColor(255, 255, 255);
-          pdf.setDrawColor(255, 255, 255);
-          pdf.rect(logoX - padding, logoY - padding, logoWidth + (padding * 2), logoHeight + (padding * 2), 'F');
-          
-          // Agregar logo sobre el fondo blanco
-          const canvas = document.createElement('canvas');
-          canvas.width = logoImg.width;
-          canvas.height = logoImg.height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(logoImg, 0, 0);
-            const logoData = canvas.toDataURL('image/png');
-            pdf.addImage(logoData, 'PNG', logoX, logoY, logoWidth, logoHeight);
-          }
-        }
-      } catch (error) {
-        console.log('Logo no disponible, continuando sin logo');
-      }
-      
-      // Título a la derecha
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('ERP TEXTIL - ORDEN DE PRODUCCIÓN', pageWidth - margin, 25, { align: 'right' });
-      pdf.setTextColor(0, 0, 0);
-      
-      yPosition = 60;
-
-      // Datos del pedido
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('DATOS DEL PEDIDO', margin, yPosition);
-      yPosition += 10;
-
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-
-      // Obtener el nombre de la línea seleccionada
-      const lineaSeleccionada = lineasProduccion.find(l => l.id === formData.linea_produccion);
-      const nombreLinea = lineaSeleccionada ? lineaSeleccionada.nombre : formData.linea_produccion;
-
-      const fields = [
-        [`Cliente:`, formData.cliente],
-        [`Ficha:`, formData.ficha],
-        [`Estilo del Cliente:`, formData.estilo_cliente],
-        [`Color:`, formData.color],
-        [`Cantidad:`, formData.cantidad],
-        [`Línea de Producción:`, nombreLinea],
-        [`Operación:`, formData.operacion],
-        [`Código de Operación:`, formData.codigo_operacion],
-        [`Fecha de Envío del Documento:`, formData.fecha_envio],
-        [`Fecha de Recojo del Pedido:`, formData.fecha_recojo],
-      ];
-
-      fields.forEach(([label, value]) => {
-        if (value) {
-          pdf.text(label, margin, yPosition);
-          pdf.text(value, margin + 80, yPosition);
-          yPosition += 7;
-        }
-      });
-
-      // Especificaciones
-      if (formData.especificacion) {
-        yPosition += 5;
-        pdf.setFontSize(14);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('ESPECIFICACIONES:', margin, yPosition);
-        yPosition += 10;
-        
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        const specLines = pdf.splitTextToSize(formData.especificacion, pageWidth - margin * 2);
-        pdf.text(specLines, margin, yPosition);
-        yPosition += specLines.length * lineHeight;
-      }
-
-      // Footer
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      yPosition = pageHeight - 30;
-      pdf.setDrawColor(200, 200, 200);
-      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-      yPosition += 10;
-      
-      pdf.setFontSize(8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Este documento fue generado automáticamente por el Sistema ERP Textil', 
-              pageWidth / 2, yPosition, { align: 'center' });
-
-      // Guardar el PDF
-      const fileName = `Orden_Produccion_${formData.ficha || 'Nueva'}_${new Date().toISOString().split('T')[0]}.pdf`;
-      pdf.save(fileName);
-      
-      // Guardar en el historial
-      const documentoHistorial = {
-        id: `prod_${Date.now()}`,
-        tipo: 'produccion' as const,
-        fecha: new Date().toISOString(),
-        cliente: formData.cliente,
-        ficha: formData.ficha,
-        descripcion: `Orden de Producción - ${formData.cliente} - ${formData.ficha} - ${nombreLinea}`,
-        datos: { ...formData }
-      };
-      
-      console.log('Disparando evento guardarDocumento:', documentoHistorial);
-      window.dispatchEvent(new CustomEvent('guardarDocumento', { detail: documentoHistorial }));
-      
-      alert('PDF generado y guardado en el historial exitosamente');
-    } catch (error) {
-      console.error('Error al generar PDF:', error);
-      alert('Error al generar el PDF. Por favor, intente nuevamente.');
     }
   };
 

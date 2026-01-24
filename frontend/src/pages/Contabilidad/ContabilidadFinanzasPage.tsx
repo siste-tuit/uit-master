@@ -1,13 +1,92 @@
-import React from 'react';
-import { financialRecords } from '../../data/mockData';
+import React, { useEffect, useState } from 'react';
+import API_BASE_URL_CORE from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+
+interface MetricasFinancieras {
+  ingresos: number;
+  egresos: number;
+  gastos: number;
+  utilidad: number;
+}
+
+interface RegistroFinanciero {
+  id: string;
+  tipo: 'ingreso' | 'egreso' | 'gasto';
+  categoria: string;
+  monto: number;
+  descripcion: string | null;
+  fecha: string;
+  status: 'pendiente' | 'aprobado' | 'rechazado';
+}
 
 const ContabilidadFinanzasPage: React.FC = () => {
   const { user } = useAuth();
   const isReadOnly = user?.role === 'gerencia';
-  const totalIngresos = financialRecords.filter(r => r.type === 'ingreso').reduce((s, r) => s + r.amount, 0);
-  const totalEgresos = financialRecords.filter(r => r.type !== 'ingreso').reduce((s, r) => s + r.amount, 0);
-  const utilidad = totalIngresos - totalEgresos;
+  const [metricas, setMetricas] = useState<MetricasFinancieras>({
+    ingresos: 0,
+    egresos: 0,
+    gastos: 0,
+    utilidad: 0
+  });
+  const [registros, setRegistros] = useState<RegistroFinanciero[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const token = localStorage.getItem('erp_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    const fetchJson = async (url: string) => {
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error(`Error ${res.status} en ${url}`);
+      return res.json();
+    };
+
+    const cargarDatos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const results = await Promise.allSettled([
+          fetchJson(`${API_BASE_URL_CORE}/contabilidad/metricas`),
+          fetchJson(`${API_BASE_URL_CORE}/contabilidad/registros?limit=20`)
+        ]);
+
+        if (!isMounted) return;
+
+        if (results[0].status === 'fulfilled') setMetricas(results[0].value);
+        if (results[1].status === 'fulfilled') setRegistros(results[1].value || []);
+      } catch (err: any) {
+        if (!isMounted) return;
+        setError(err.message || 'Error al cargar datos');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    cargarDatos();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const totalIngresos = metricas.ingresos || 0;
+  const totalEgresos = (metricas.egresos || 0) + (metricas.gastos || 0);
+  const utilidad = metricas.utilidad || 0;
+
+  if (loading) {
+    return <div className="p-6">Cargando...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="p-4 bg-red-100 border border-red-300 text-red-800 rounded-lg">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -51,18 +130,25 @@ const ContabilidadFinanzasPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {financialRecords.map((r) => (
+              {registros.map((r) => (
                 <tr key={r.id} className="border-t border-gray-100">
-                  <td className="py-2 pr-4">{new Date(r.date).toLocaleDateString()}</td>
-                  <td className="py-2 pr-4 capitalize">{r.type}</td>
-                  <td className="py-2 pr-4">{r.category}</td>
-                  <td className="py-2 pr-4">{r.description}</td>
-                  <td className="py-2 pr-4 font-mono">{new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(r.amount)}</td>
+                  <td className="py-2 pr-4">{new Date(r.fecha).toLocaleDateString()}</td>
+                  <td className="py-2 pr-4 capitalize">{r.tipo}</td>
+                  <td className="py-2 pr-4">{r.categoria}</td>
+                  <td className="py-2 pr-4">{r.descripcion || 'Sin descripción'}</td>
+                  <td className="py-2 pr-4 font-mono">{new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(r.monto)}</td>
                   <td className="py-2">
                     <span className={`px-2 py-1 text-xs rounded ${r.status === 'aprobado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{r.status}</span>
                   </td>
                 </tr>
               ))}
+              {registros.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-4 text-center text-sm text-gray-500">
+                    No hay registros financieros recientes.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

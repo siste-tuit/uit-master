@@ -61,8 +61,8 @@ src/
 │   └── UsuarioDashboard.tsx
 ├── context/            # Contextos de React
 │   └── AuthContext.tsx # Manejo de autenticación
-├── data/               # Datos mock
-│   └── mockData.ts     # Datos de ejemplo
+├── data/               # Datos de soporte
+│   └── roleModules.ts  # Módulos por rol
 └── App.tsx            # Componente principal
 ```
 

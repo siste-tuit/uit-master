@@ -117,3 +117,24 @@ export const getMetricasFinancieras = async (req, res) => {
     }
 };
 
+// Obtener registros financieros recientes
+export const getRegistrosFinancierosRecientes = async (req, res) => {
+    try {
+        const limitParam = Number(req.query.limit || 10);
+        const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 50) : 10;
+
+        const [registros] = await pool.query(
+            `SELECT id, tipo, categoria, monto, descripcion, fecha, status
+             FROM registros_financieros
+             ORDER BY fecha DESC, created_at DESC
+             LIMIT ?`,
+            [limit]
+        );
+
+        res.json(registros);
+    } catch (error) {
+        console.error("❌ Error al obtener registros financieros recientes:", error);
+        res.status(500).json({ message: "Error al obtener registros financieros recientes" });
+    }
+};
+

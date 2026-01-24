@@ -68,7 +68,10 @@ const IngenieriaReportesPage: React.FC = () => {
     const fetchLineas = async () => {
       try {
         setLoadingLineas(true);
-        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`);
+        const token = localStorage.getItem('erp_token');
+        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
         if (response.ok) {
           const data = await response.json();
           console.log('📊 Líneas recibidas del backend (Reportes):', data.lineas.length);
@@ -115,7 +118,7 @@ const IngenieriaReportesPage: React.FC = () => {
     });
   };
 
-  const generarReporte = () => {
+  const generarReporte = async () => {
     if (isReadOnly) {
       return;
     }
@@ -145,47 +148,68 @@ const IngenieriaReportesPage: React.FC = () => {
     }
 
     const tiempoTotalDias = Math.ceil((fechaFin.getTime() - fechaInicio.getTime()) / (1000 * 60 * 60 * 24));
-    const promedioDiario = Math.round(cantidadConfeccionada / tiempoTotalDias);
-
-    // Calcular efectividad basado en la cantidad confeccionada vs pedida
-    const porcentajeCumplimiento = Math.round((cantidadConfeccionada / cantidadPedida) * 100);
-    
-    // Estándar de producción textil: 100 prendas/día es 100% efectividad
-    const estandarProduccion = 100; // prendas por día como 100%
-    const produccionObjetivo = estandarProduccion * tiempoTotalDias;
-    
-    // Calcular efectividad basado en la producción real vs objetivo
-    const efectividadPromedio = Math.min(100, Math.round((cantidadConfeccionada / produccionObjetivo) * 100));
-
-    // Generar datos diarios simulados basados en el promedio y efectividad
-    const produccionDatos = [];
-    
-    for (let i = 0; i < tiempoTotalDias; i++) {
-      const fecha = new Date(fechaInicio);
-      fecha.setDate(fecha.getDate() + i);
-      
-      // Simular variación diaria (±20%)
-      const variacion = 1 + (Math.random() * 0.4 - 0.2);
-      const cantidadDiaria = Math.max(1, Math.round(promedioDiario * variacion));
-      
-      // Efectividad diaria basada en cantidad vs estándar
-      const efectividadDiaria = Math.min(100, Math.round((cantidadDiaria / estandarProduccion) * 100));
-      
-      produccionDatos.push({
-        fecha: fecha.toISOString().split('T')[0],
-        cantidad: cantidadDiaria,
-        porcentaje_efectividad: efectividadDiaria
+    const token = localStorage.getItem('erp_token');
+    try {
+      const query = new URLSearchParams({
+        fecha_inicio: formReporte.fecha_inicio,
+        fecha_fin: formReporte.fecha_fin
       });
-    }
+      const response = await fetch(`${API_BASE_URL_CORE}/reportes-produccion/reportes-diarios?${query.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined
+      });
+      if (!response.ok) {
+        throw new Error('No se pudo obtener reportes diarios reales');
+      }
 
-    // Ajustar el total para que coincida exactamente con el ingresado
-    const totalSimulado = produccionDatos.reduce((sum, d) => sum + d.cantidad, 0);
-    const diferencia = cantidadConfeccionada - totalSimulado;
-    if (diferencia !== 0 && produccionDatos.length > 0) {
-      const ultimoDia = produccionDatos[produccionDatos.length - 1];
-      ultimoDia.cantidad += diferencia;
-      ultimoDia.porcentaje_efectividad = Math.min(100, Math.round((ultimoDia.cantidad / estandarProduccion) * 100));
-    }
+      const data = await response.json();
+      const reportesPorUsuario = Array.isArray(data.reportes) ? data.reportes : [];
+      const reportes = reportesPorUsuario.flatMap((grupo: any) => grupo.reportes || []);
+      const reportesFiltrados = reportes.filter((r: any) => {
+        if (!r?.fecha) return false;
+        if (formReporte.linea_produccion && r.linea_id && r.linea_id !== formReporte.linea_produccion) {
+          return false;
+        }
+        return true;
+      });
+
+      if (reportesFiltrados.length === 0) {
+        alert('No hay reportes diarios reales en el rango y línea seleccionados.');
+        return;
+      }
+
+      const mapaDiario = new Map<string, { producido: number; defectuoso: number }>();
+      reportesFiltrados.forEach((r: any) => {
+        const fecha = r.fecha;
+        const producido = Number(r.cantidad_producida || 0);
+        const defectuoso = Number(r.cantidad_defectuosa || 0);
+        const actual = mapaDiario.get(fecha) || { producido: 0, defectuoso: 0 };
+        actual.producido += producido;
+        actual.defectuoso += defectuoso;
+        mapaDiario.set(fecha, actual);
+      });
+
+      const produccionDatos: { fecha: string; cantidad: number; porcentaje_efectividad: number }[] = [];
+      let totalDefectuoso = 0;
+      for (let i = 0; i < tiempoTotalDias; i++) {
+        const fecha = new Date(fechaInicio);
+        fecha.setDate(fecha.getDate() + i);
+        const fechaStr = fecha.toISOString().split('T')[0];
+        const diario = mapaDiario.get(fechaStr) || { producido: 0, defectuoso: 0 };
+        const producido = diario.producido;
+        const neto = producido - diario.defectuoso;
+        const efectividadDiaria = producido > 0 ? Math.round((neto / producido) * 100) : 0;
+        totalDefectuoso += diario.defectuoso;
+        produccionDatos.push({
+          fecha: fechaStr,
+          cantidad: producido,
+          porcentaje_efectividad: efectividadDiaria
+        });
+      }
+
+      const totalProducido = produccionDatos.reduce((sum, d) => sum + d.cantidad, 0);
+      const porcentajeCumplimiento = Math.round((totalProducido / cantidadPedida) * 100);
+      const promedioDiario = Math.round(totalProducido / tiempoTotalDias);
+      const efectividadPromedio = totalProducido > 0 ? Math.round(((totalProducido - totalDefectuoso) / totalProducido) * 100) : 0;
 
     // Determinar estado basado en porcentaje de cumplimiento y efectividad
     let estado: 'atrasado' | 'en_tiempo' | 'adelantado';
@@ -212,7 +236,7 @@ const IngenieriaReportesPage: React.FC = () => {
       produccion_datos: produccionDatos,
       tiempo_total_dias: tiempoTotalDias,
       cantidad_pedida: cantidadPedida,
-      cantidad_confeccionada: cantidadConfeccionada,
+      cantidad_confeccionada: totalProducido,
       promedio_diario: promedioDiario,
       efectividad_promedio: efectividadPromedio,
       estado: estado
@@ -221,6 +245,10 @@ const IngenieriaReportesPage: React.FC = () => {
     setReporteGenerado(nuevoReporte);
     setMostrarFormulario(false);
     alert('Reporte generado exitosamente');
+    } catch (error: any) {
+      console.error('❌ Error al generar reporte real:', error);
+      alert(error.message || 'No se pudo generar el reporte con datos reales');
+    }
   };
 
   const handleEnviarReporte = async () => {
@@ -558,20 +586,7 @@ const IngenieriaReportesPage: React.FC = () => {
       const fileName = `Reporte_Produccion_${reporteGenerado.numero_ficha}_${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
       
-      // Guardar en el historial
-      const documentoHistorial = {
-        id: `rpt_${Date.now()}`,
-        tipo: 'reporte' as const,
-        fecha: new Date().toISOString(),
-        cliente: reporteGenerado.cliente,
-        ficha: reporteGenerado.numero_ficha,
-        descripcion: `Reporte de Producción - ${reporteGenerado.cliente} - ${reporteGenerado.numero_ficha} - ${reporteGenerado.linea_produccion}`,
-        datos: { ...reporteGenerado }
-      };
-      
-      window.dispatchEvent(new CustomEvent('guardarDocumento', { detail: documentoHistorial }));
-      
-      alert('PDF generado con gráficos y guardado en el historial exitosamente');
+      alert('PDF generado con gráficos exitosamente');
     } catch (error) {
       console.error('Error al generar PDF:', error);
       alert('Error al generar el PDF. Por favor, intente nuevamente.');

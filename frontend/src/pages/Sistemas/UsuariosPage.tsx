@@ -29,6 +29,7 @@ interface UserData {
     role_id: number;
     department: string;
     is_active: boolean;
+    last_login?: string | null;
 }
 
 // Función de mapeo para adaptar UserData del Contexto a la interfaz Usuario de la página.
@@ -47,7 +48,7 @@ const mapUserDataToUsuario = (userData: UserData): Usuario => {
     rol: userData.role_name,
     departamento: userData.department,
     estado: userData.is_active ? 'activo' : 'inactivo', 
-    ultimoAcceso: new Date(Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 7)),
+    ultimoAcceso: userData.last_login ? new Date(userData.last_login) : new Date(0),
     fechaCreacion: new Date('2024-01-01'),
     avatar: avatar,
     telefono: undefined,
@@ -122,6 +123,13 @@ const UsuariosPage: React.FC = () => {
       case 'Usuario': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const formatUltimoAcceso = (fecha: Date) => {
+    if (!fecha || Number.isNaN(fecha.getTime()) || fecha.getTime() === 0) {
+      return 'Sin registro';
+    }
+    return fecha.toLocaleString();
   };
 
   // Lógica de filtrado y estadísticas se mantienen igual
@@ -433,7 +441,7 @@ const UsuariosPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                      {usuario.ultimoAcceso.toLocaleString()}
+                      {formatUltimoAcceso(usuario.ultimoAcceso)}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                       {isReadOnly ? (
@@ -521,7 +529,7 @@ const UsuariosPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{usuario.nombre}</p>
                       <p className="text-xs text-gray-500">
-                        {usuario.ultimoAcceso.toLocaleString()}
+                        {formatUltimoAcceso(usuario.ultimoAcceso)}
                       </p>
                     </div>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getEstadoColor(usuario.estado)}`}>

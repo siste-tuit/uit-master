@@ -882,6 +882,79 @@ export const getUsuariosProduccion = async (req, res) => {
     }
 };
 
+// Obtener historial de documentos para Ingeniería/Gerencia
+export const getHistorialIngenieria = async (req, res) => {
+    try {
+        const extraerValor = (texto, etiqueta) => {
+            if (!texto) return null;
+            const regex = new RegExp(`${etiqueta}:\\s*(.+)`, 'i');
+            const match = texto.match(regex);
+            return match ? match[1].split('\n')[0].trim() : null;
+        };
+
+        const [pedidos] = await pool.query(
+            `SELECT 
+                pr.id,
+                pr.numero_ficha,
+                pr.numero_pedido,
+                pr.cliente,
+                pr.cantidad,
+                pr.fecha_envio,
+                pr.estado,
+                lp.nombre as linea_nombre
+             FROM pedidos_recibidos pr
+             LEFT JOIN lineas_produccion lp ON pr.linea_produccion = lp.id
+             ORDER BY pr.fecha_envio DESC`
+        );
+
+        const [reportes] = await pool.query(
+            `SELECT 
+                rd.id,
+                rd.fecha,
+                rd.cantidad_producida,
+                rd.cantidad_defectuosa,
+                rd.observaciones,
+                rd.incidencias,
+                lp.nombre as linea_nombre
+             FROM reportes_diarios rd
+             LEFT JOIN lineas_produccion lp ON rd.linea_id = lp.id
+             ORDER BY rd.fecha DESC`
+        );
+
+        const documentos = [
+            ...pedidos.map(pedido => ({
+                id: pedido.id,
+                tipo: 'produccion',
+                fecha: pedido.fecha_envio,
+                cliente: pedido.cliente,
+                ficha: pedido.numero_ficha,
+                descripcion: `Pedido ${pedido.numero_pedido} - ${pedido.cliente}`,
+                datos: pedido
+            })),
+            ...reportes.map(reporte => {
+                const ficha = extraerValor(reporte.observaciones, 'Ficha');
+                const cliente = extraerValor(reporte.observaciones, 'Cliente');
+                return {
+                    id: reporte.id,
+                    tipo: 'reporte',
+                    fecha: reporte.fecha,
+                    cliente: cliente || 'N/A',
+                    ficha: ficha || 'N/A',
+                    descripcion: `Reporte diario - ${reporte.linea_nombre || 'Sin línea'}`,
+                    datos: reporte
+                };
+            })
+        ].filter(doc => doc.fecha);
+
+        documentos.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+
+        res.json({ documentos });
+    } catch (error) {
+        console.error('❌ Error al obtener historial de ingeniería:', error);
+        res.status(500).json({ message: 'Error al obtener historial', error: error.message });
+    }
+};
+
 // Obtener estadísticas detalladas del usuario (diarias, semanales, mensuales)
 export const getEstadisticasUsuario = async (req, res) => {
     try {

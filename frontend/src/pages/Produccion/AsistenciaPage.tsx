@@ -23,6 +23,7 @@ interface RegistroAsistencia {
 
 const AsistenciaPage: React.FC = () => {
   const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [trabajadores, setTrabajadores] = useState<Trabajador[]>([]);
   const [fechaSeleccionada, setFechaSeleccionada] = useState(new Date().toISOString().split('T')[0]);
   const [registros, setRegistros] = useState<Record<string, RegistroAsistencia>>({});
@@ -128,6 +129,7 @@ const AsistenciaPage: React.FC = () => {
   };
 
   const handleTimeChange = (trabajadorId: string, field: string, value: string) => {
+    if (isReadOnly) return;
     setRegistros(prev => ({
       ...prev,
       [trabajadorId]: {
@@ -138,6 +140,7 @@ const AsistenciaPage: React.FC = () => {
   };
 
   const handleSave = async (trabajadorId: string) => {
+    if (isReadOnly) return;
     try {
       const registro = registros[trabajadorId];
       if (!registro) return;
@@ -243,6 +246,7 @@ const AsistenciaPage: React.FC = () => {
                         type="time"
                         value={formatTime(registro.hora_entrada)}
                         onChange={(e) => handleTimeChange(trabajador.id, 'hora_entrada', e.target.value)}
+                        disabled={isReadOnly}
                         className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-green-500"
                       />
                     </td>
@@ -251,6 +255,7 @@ const AsistenciaPage: React.FC = () => {
                         type="time"
                         value={formatTime(registro.hora_refrigerio_salida)}
                         onChange={(e) => handleTimeChange(trabajador.id, 'hora_refrigerio_salida', e.target.value)}
+                        disabled={isReadOnly}
                         className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-green-500"
                       />
                     </td>
@@ -259,6 +264,7 @@ const AsistenciaPage: React.FC = () => {
                         type="time"
                         value={formatTime(registro.hora_refrigerio_llegada)}
                         onChange={(e) => handleTimeChange(trabajador.id, 'hora_refrigerio_llegada', e.target.value)}
+                        disabled={isReadOnly}
                         className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-green-500"
                       />
                     </td>
@@ -267,6 +273,7 @@ const AsistenciaPage: React.FC = () => {
                         type="time"
                         value={formatTime(registro.hora_salida)}
                         onChange={(e) => handleTimeChange(trabajador.id, 'hora_salida', e.target.value)}
+                        disabled={isReadOnly}
                         className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-green-500"
                       />
                     </td>
@@ -274,12 +281,16 @@ const AsistenciaPage: React.FC = () => {
                       {registro.horas_trabajadas ? `${registro.horas_trabajadas} hrs` : '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <button
-                        onClick={() => handleSave(trabajador.id)}
-                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                      >
-                        Guardar
-                      </button>
+                      {isReadOnly ? (
+                        <span className="text-xs text-gray-400">Solo lectura</span>
+                      ) : (
+                        <button
+                          onClick={() => handleSave(trabajador.id)}
+                          className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                        >
+                          Guardar
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

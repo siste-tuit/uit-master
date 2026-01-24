@@ -20,6 +20,7 @@ import inventarioRoutes from "./routes/inventario.js";
 import incidenciasRoutes from "./routes/incidencias.js";
 import reportesProduccionRoutes from "./routes/reportesProduccion.js";
 import flujosSalidaRoutes from "./routes/flujosSalida.js";
+import flujosIngresoRoutes from "./routes/flujosIngreso.js";
 import trabajadoresRoutes from "./routes/trabajadores.js";
 import asistenciaRoutes from "./routes/asistencia.js";
 
@@ -67,6 +68,8 @@ app.use("/api/inventario", inventarioRoutes);
 app.use("/api/incidencias", incidenciasRoutes);
 // 📥 Rutas de Flujos de Salida
 app.use("/api/flujos-salida", flujosSalidaRoutes);
+// 📤 Rutas de Flujos de Ingreso
+app.use("/api/flujos-ingreso", flujosIngresoRoutes);
 // 👥 Rutas de Trabajadores
 app.use("/api/trabajadores", trabajadoresRoutes);
 // ⏰ Rutas de Asistencia

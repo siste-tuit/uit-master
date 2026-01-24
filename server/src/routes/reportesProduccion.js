@@ -9,7 +9,8 @@ import {
     getPedidosRecibidosPorUsuario,
     getEstadisticasUsuario,
     getEstadisticasGerencia,
-    getUsuariosProduccion
+    getUsuariosProduccion,
+    getHistorialIngenieria
 } from '../controllers/reportesProduccionController.js';
 import { authenticateToken, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -40,6 +41,8 @@ router.get('/reportes-diarios', authenticateToken, authorizeRoles(['ingenieria',
 router.get('/estadisticas/:usuario_id', authenticateToken, authorizeRoles(['usuarios']), getEstadisticasUsuario);
 // Ruta para estadísticas agregadas para Gerencia (diarias, semanales, mensuales, efectividad por usuario)
 router.get('/estadisticas-gerencia', authenticateToken, authorizeRoles(['gerencia']), getEstadisticasGerencia);
+// Historial de documentos para Ingeniería y Gerencia
+router.get('/historial', authenticateToken, authorizeRoles(['ingenieria', 'gerencia']), getHistorialIngenieria);
 
 export default router;
 

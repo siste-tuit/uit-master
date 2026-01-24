@@ -20,6 +20,7 @@ const IngenieriaDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [lineaSeleccionada, setLineaSeleccionada] = useState<LineaProduccion | null>(null);
+  const [tendenciaProduccion, setTendenciaProduccion] = useState<Array<{ fecha: string; produccion: number }>>([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const [formData, setFormData] = useState({
     cantidad_producida: '',
@@ -40,133 +41,53 @@ const IngenieriaDashboard: React.FC = () => {
 
   // Obtener datos del backend
   useEffect(() => {
+    let isMounted = true;
+    const token = localStorage.getItem('erp_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
     const fetchData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL_CORE}/produccion/ingenieria`);
-        if (response.ok) {
-          const data = await response.json();
-          setLineasProduccion(data.lineas || []);
+        setLoading(true);
+        const [lineasRes, tendenciaRes] = await Promise.all([
+          fetch(`${API_BASE_URL_CORE}/produccion/ingenieria`, { headers }),
+          fetch(`${API_BASE_URL_CORE}/produccion/periodo?periodo=semanal`, { headers })
+        ]);
+
+        if (lineasRes.ok) {
+          const data = await lineasRes.json();
+          if (isMounted) setLineasProduccion(data.lineas || []);
         } else {
-          console.warn('⚠️ Error al obtener datos del servidor:', response.status, response.statusText);
+          console.warn('⚠️ Error al obtener datos del servidor:', lineasRes.status, lineasRes.statusText);
+        }
+
+        if (tendenciaRes.ok) {
+          const tendenciaData = await tendenciaRes.json();
+          const datos = Array.isArray(tendenciaData?.datos) ? tendenciaData.datos : [];
+          const mapeados = datos.map((item: any) => ({
+            fecha: item.date,
+            produccion: Number(item.production || 0)
+          }));
+          if (isMounted) setTendenciaProduccion(mapeados.slice(-7));
+        } else {
+          console.warn('⚠️ Error al obtener tendencia:', tendenciaRes.status, tendenciaRes.statusText);
         }
       } catch (error) {
         console.error('❌ Error al conectar con el servidor:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchData();
     // Actualizar cada 30 segundos
     const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
-  // Datos de líneas de producción textil (fallback)
-  const lineasFallback: LineaProduccion[] = [
-    {
-      id: '1',
-      nombre: 'A&C - CHINCHA GREEN',
-      usuarios: ['Juan Pérez', 'María González'],
-      produccionActual: 1850,
-      produccionObjetivo: 2000,
-      eficiencia: 92.5,
-      status: 'activa',
-    },
-    {
-      id: '2',
-      nombre: 'A&C 2 - CHINCHA GREEN',
-      usuarios: ['Carlos Ramírez', 'Ana Martínez'],
-      produccionActual: 1720,
-      produccionObjetivo: 2000,
-      eficiencia: 86.0,
-      status: 'activa',
-    },
-    {
-      id: '3',
-      nombre: 'A&C 3 - CHINCHA GREEN',
-      usuarios: ['Luis Sánchez', 'Patricia López'],
-      produccionActual: 1920,
-      produccionObjetivo: 2000,
-      eficiencia: 96.0,
-      status: 'activa',
-    },
-    {
-      id: '4',
-      nombre: 'A&C 4 - CHINCHA GREEN',
-      usuarios: ['Roberto Torres'],
-      produccionActual: 1680,
-      produccionObjetivo: 2000,
-      eficiencia: 84.0,
-      status: 'activa',
-    },
-    {
-      id: '5',
-      nombre: 'D&M - CHINCHA GREEN',
-      usuarios: ['Carmen Vega', 'Fernando Díaz'],
-      produccionActual: 1950,
-      produccionObjetivo: 2000,
-      eficiencia: 97.5,
-      status: 'activa',
-    },
-    {
-      id: '6',
-      nombre: 'ELENA TEX - CHINCHA GREEN',
-      usuarios: ['Sandra Morales'],
-      produccionActual: 1890,
-      produccionObjetivo: 2000,
-      eficiencia: 94.5,
-      status: 'activa',
-    },
-    {
-      id: '7',
-      nombre: 'JFL STYLE - CHINCHA GREEN',
-      usuarios: ['Miguel Herrera', 'Laura Jiménez'],
-      produccionActual: 1760,
-      produccionObjetivo: 2000,
-      eficiencia: 88.0,
-      status: 'activa',
-    },
-    {
-      id: '8',
-      nombre: 'JUANA ZEA - CHINCHA GREEN',
-      usuarios: ['Pedro Castro'],
-      produccionActual: 0,
-      produccionObjetivo: 2000,
-      eficiencia: 0,
-      status: 'mantenimiento',
-    },
-    {
-      id: '9',
-      nombre: 'M&L - CHINCHA GREEN',
-      usuarios: ['Elena Ruiz', 'Diego Moreno'],
-      produccionActual: 1840,
-      produccionObjetivo: 2000,
-      eficiencia: 92.0,
-      status: 'activa',
-    },
-    {
-      id: '10',
-      nombre: 'M&L 2 - CHINCHA GREEN',
-      usuarios: ['Gabriela Paredes'],
-      produccionActual: 1810,
-      produccionObjetivo: 2000,
-      eficiencia: 90.5,
-      status: 'activa',
-    },
-    {
-      id: '11',
-      nombre: 'VELASQUEZ - CHINCHA GREEN',
-      usuarios: ['Ricardo Valdez', 'Monica Soto'],
-      produccionActual: 1880,
-      produccionObjetivo: 2000,
-      eficiencia: 94.0,
-      status: 'activa',
-    },
-  ];
-
-  // Usar datos del backend o fallback
-  const lineas = lineasProduccion.length > 0 ? lineasProduccion : lineasFallback;
+  const lineas = lineasProduccion;
 
   // Función para abrir modal de registro
   const handleRegistrarProduccion = (linea: LineaProduccion) => {
@@ -233,10 +154,12 @@ const IngenieriaDashboard: React.FC = () => {
       console.log('Enviando datos:', requestBody);
 
       // Registrar la producción (el estado se actualiza dentro del mismo endpoint)
+      const token = localStorage.getItem('erp_token');
       const response = await fetch(`${API_BASE_URL_CORE}/produccion/registrar`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify(requestBody)
       });
@@ -247,7 +170,9 @@ const IngenieriaDashboard: React.FC = () => {
         alert('✅ Producción registrada y estado actualizado exitosamente');
         setShowModal(false);
         // Recargar datos
-        const dataResponse = await fetch(`${API_BASE_URL_CORE}/produccion/ingenieria`);
+        const dataResponse = await fetch(`${API_BASE_URL_CORE}/produccion/ingenieria`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
         if (dataResponse.ok) {
           const data = await dataResponse.json();
           setLineasProduccion(data.lineas);
@@ -279,16 +204,8 @@ const IngenieriaDashboard: React.FC = () => {
     eficiencia: l.eficiencia,
   }));
 
-  // Datos para gráfico de tendencia (últimos 7 días)
-  const datosGraficoTendencia = [
-    { fecha: 'Lun', produccion: 17800 },
-    { fecha: 'Mar', produccion: 18200 },
-    { fecha: 'Mié', produccion: 17500 },
-    { fecha: 'Jue', produccion: 18900 },
-    { fecha: 'Vie', produccion: 18500 },
-    { fecha: 'Sáb', produccion: 19200 },
-    { fecha: 'Dom', produccion: totalProduccion },
-  ];
+  // Datos para gráfico de tendencia (últimos 7 puntos reales)
+  const datosGraficoTendencia = tendenciaProduccion;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -374,24 +291,30 @@ const IngenieriaDashboard: React.FC = () => {
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-5 lg:p-6 overflow-hidden">
           <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Producción por Línea</h2>
           <div className="h-64 sm:h-72 lg:h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={datosGraficoBarras} margin={{ top: 5, right: 5, left: -10, bottom: isMobile ? 80 : 60 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="nombre" 
-                  angle={isMobile ? -90 : -45}
-                  textAnchor={isMobile ? "middle" : "end"}
-                  height={isMobile ? 120 : 80}
-                  interval={isMobile ? "preserveStartEnd" : 0}
-                  tick={{ fontSize: isMobile ? 9 : 10 }}
-                />
-                <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
-                <Bar dataKey="produccion" name="Producción Actual" fill="#1A5632" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="objetivo" name="Objetivo" fill="#94A3B8" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {lineas.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                No hay datos reales de líneas de producción.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={datosGraficoBarras} margin={{ top: 5, right: 5, left: -10, bottom: isMobile ? 80 : 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="nombre" 
+                    angle={isMobile ? -90 : -45}
+                    textAnchor={isMobile ? "middle" : "end"}
+                    height={isMobile ? 120 : 80}
+                    interval={isMobile ? "preserveStartEnd" : 0}
+                    tick={{ fontSize: isMobile ? 9 : 10 }}
+                  />
+                  <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
+                  <Bar dataKey="produccion" name="Producción Actual" fill="#1A5632" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="objetivo" name="Objetivo" fill="#94A3B8" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -399,23 +322,33 @@ const IngenieriaDashboard: React.FC = () => {
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-5 lg:p-6 overflow-hidden">
           <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Tendencia de Producción</h2>
           <div className="h-64 sm:h-72 lg:h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={datosGraficoTendencia} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="fecha" tick={{ fontSize: isMobile ? 10 : 11 }} />
-                <YAxis tick={{ fontSize: isMobile ? 10 : 11 }} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
-                <Line 
-                  type="monotone" 
-                  dataKey="produccion" 
-                  name="Producción Total" 
-                  stroke="#1A5632" 
-                  strokeWidth={isMobile ? 2 : 3}
-                  dot={{ fill: '#1A5632', strokeWidth: 2, r: isMobile ? 4 : 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {datosGraficoTendencia.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-sm text-gray-500">
+                No hay tendencia real disponible.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={datosGraficoTendencia} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="fecha" 
+                    tick={{ fontSize: isMobile ? 10 : 11 }}
+                    tickFormatter={(value) => new Date(value).toLocaleDateString('es-ES', { month: 'short', day: '2-digit' })}
+                  />
+                  <YAxis tick={{ fontSize: isMobile ? 10 : 11 }} />
+                  <Tooltip labelFormatter={(value) => new Date(value as string).toLocaleDateString('es-ES')} />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
+                  <Line 
+                    type="monotone" 
+                    dataKey="produccion" 
+                    name="Producción Total" 
+                    stroke="#1A5632" 
+                    strokeWidth={isMobile ? 2 : 3}
+                    dot={{ fill: '#1A5632', strokeWidth: 2, r: isMobile ? 4 : 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
@@ -424,6 +357,11 @@ const IngenieriaDashboard: React.FC = () => {
       <div className="mb-4 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Líneas de Producción Textil</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {lineas.length === 0 && (
+            <div className="col-span-full bg-white rounded-xl shadow-md border border-gray-200 p-6 text-center text-gray-500">
+              No hay líneas registradas todavía.
+            </div>
+          )}
           {lineas.map((linea) => (
             <div 
               key={linea.id} 

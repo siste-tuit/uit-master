@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLogs } from '@/context/LogContext'; // Ajusta la ruta de importación
+import { useAuth } from '@/context/AuthContext';
 
 // Definición de tipos adaptada a la vista original
 interface LogEntry {
@@ -63,6 +64,8 @@ const mapLogDataToLogEntry = (logData: LogData): LogEntry => {
 
 const LogsPage: React.FC = () => {
     // 1. Usar el hook del contexto para obtener logs, resumen y funciones
+    const { user } = useAuth();
+    const isReadOnly = user?.role === 'gerencia';
     const {
         logs: logsContext,
         summary: summaryContext,
@@ -197,7 +200,8 @@ const LogsPage: React.FC = () => {
     };
 
     const handleLimpiarLogs = () => {
-        if (window.confirm('¿Estás seguro de que quieres limpiar todos los logs? (Esta acción solo es simulada en el front)')) {
+        if (isReadOnly) return;
+        if (window.confirm('¿Estás seguro de que quieres limpiar todos los logs?')) {
             // Nota: Se requiere una función `deleteLogs` en el contexto para hacer esto real
             // setLogs([]); // Si tuviéramos un setLogs local
         }
@@ -367,13 +371,15 @@ const LogsPage: React.FC = () => {
                             <span>📥</span>
                             <span>Exportar</span>
                         </button>
-                        <button
-                            onClick={handleLimpiarLogs}
-                            className="flex items-center px-4 py-2 space-x-2 font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700"
-                        >
-                            <span>🗑️</span>
-                            <span>Limpiar</span>
-                        </button>
+                        {!isReadOnly && (
+                            <button
+                                onClick={handleLimpiarLogs}
+                                className="flex items-center px-4 py-2 space-x-2 font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700"
+                            >
+                                <span>🗑️</span>
+                                <span>Limpiar</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

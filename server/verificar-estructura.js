@@ -114,7 +114,7 @@ const frontendFiles = {
   'Página FlujosRecibidos': path.join(frontendRoot, 'pages', 'Sistemas', 'FlujosRecibidosPage.tsx'),
   'Página FichaSalida (Ingeniería)': path.join(frontendRoot, 'pages', 'Ingenieria', 'IngenieriaFichaSalidaPage.tsx'),
   'App.tsx (rutas)': path.join(frontendRoot, 'App.tsx'),
-  'mockData.ts (menú)': path.join(frontendRoot, 'data', 'mockData.ts')
+  'roleModules.ts (menú)': path.join(frontendRoot, 'data', 'roleModules.ts')
 };
 
 for (const [nombre, ruta] of Object.entries(frontendFiles)) {
@@ -139,8 +139,8 @@ for (const [nombre, ruta] of Object.entries(frontendFiles)) {
       verificar(`App.tsx tiene ruta /sistemas/flujos-recibidos`, contenido.includes('flujos-recibidos'));
     }
     
-    if (nombre === 'mockData.ts (menú)') {
-      verificar(`mockData.ts incluye "Flujos Recibidos" en menú`, contenido.includes('Flujos Recibidos'));
+    if (nombre === 'roleModules.ts (menú)') {
+      verificar(`roleModules.ts incluye "Flujos Recibidos" en menú`, contenido.includes('Flujos Recibidos'));
     }
   }
 }

@@ -50,6 +50,11 @@ async function runAllMigrations() {
         await runFlujosSalidaMigrations(connection);
         console.log('✅ Migraciones FLUJOS SALIDA completadas\n');
 
+        // 8. Migración Flujos Ingreso
+        console.log('📤 Ejecutando migraciones de FLUJOS INGRESO...');
+        await runFlujosIngresoMigrations(connection);
+        console.log('✅ Migraciones FLUJOS INGRESO completadas\n');
+
         console.log('\n🎉 ¡TODAS las migraciones ejecutadas exitosamente!');
         console.log('✅ El sistema está listo para producción.\n');
 
@@ -520,6 +525,24 @@ async function runFlujosSalidaMigrations(connection) {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (usuario_sistemas_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+            FOREIGN KEY (usuario_ingenieria_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        )
+    `);
+}
+
+async function runFlujosIngresoMigrations(connection) {
+    await connection.query(`
+        CREATE TABLE IF NOT EXISTS flujos_ingreso (
+            id VARCHAR(36) PRIMARY KEY,
+            usuario_ingenieria_id VARCHAR(36) NOT NULL,
+            usuario_ingenieria_nombre VARCHAR(150) NOT NULL,
+            usuario_ingenieria_email VARCHAR(100) NOT NULL,
+            filtros JSON NOT NULL,
+            filas JSON NOT NULL,
+            total_filas INT NOT NULL DEFAULT 0,
+            fecha_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (usuario_ingenieria_id) REFERENCES usuarios(id) ON DELETE CASCADE
         )
     `);

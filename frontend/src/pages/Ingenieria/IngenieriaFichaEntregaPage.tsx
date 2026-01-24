@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import API_BASE_URL_CORE from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 
 interface FlujoIngresoRow {
@@ -21,22 +22,6 @@ interface FiltrosFlujoIngreso {
   semana: string;
   linea: string;
 }
-
-const lineasDisponibles = [
-  'A&C - CHINCHA GREEN',
-  'A&C 2 - CHINCHA GREEN',
-  'A&C 3 - CHINCHA GREEN',
-  'A&C 4 - CHINCHA GREEN',
-  'D&M - CHINCHA GREEN',
-  'ELENA TEX - CHINCHA GREEN',
-  'EMANUEL - CHINCHA GREEN',
-  'EMANUEL 2 - CHINCHA GREEN',
-  'JFL STYLE - CHINCHA GREEN',
-  'JUANA ZEA - CHINCHA GREEN',
-  'M&L - CHINCHA GREEN',
-  'M&L 2 - CHINCHA GREEN',
-  'VELASQUEZ - CHINCHA GREEN'
-];
 
 const meses = [
   { value: '01', label: 'Enero' },
@@ -80,6 +65,10 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
 
   const [filtros, setFiltros] = useState<FiltrosFlujoIngreso>(filtrosIniciales);
   const [filas, setFilas] = useState<FlujoIngresoRow[]>([crearFilaVacia(filtrosIniciales.linea)]);
+  const [lineasDisponibles, setLineasDisponibles] = useState<string[]>([]);
+  const [loadingLineas, setLoadingLineas] = useState(true);
+  const [flujosIngreso, setFlujosIngreso] = useState<any[]>([]);
+  const [loadingFlujos, setLoadingFlujos] = useState(true);
 
   const semanas = useMemo(
     () =>
@@ -89,6 +78,60 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
       }),
     []
   );
+
+  useEffect(() => {
+    const cargarLineas = async () => {
+      try {
+        setLoadingLineas(true);
+        const token = localStorage.getItem('erp_token');
+        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const nombres = (data.lineas || []).map((l: any) => l.nombre);
+          setLineasDisponibles(nombres);
+        } else {
+          setLineasDisponibles([]);
+        }
+      } catch (error) {
+        console.error('Error al cargar líneas:', error);
+        setLineasDisponibles([]);
+      } finally {
+        setLoadingLineas(false);
+      }
+    };
+
+    cargarLineas();
+  }, []);
+
+  const cargarFlujos = async () => {
+    try {
+      setLoadingFlujos(true);
+      const token = localStorage.getItem('erp_token');
+      const params = new URLSearchParams();
+      if (filtros.linea) params.append('linea', filtros.linea);
+      const response = await fetch(`${API_BASE_URL_CORE}/flujos-ingreso?${params.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFlujosIngreso(data.flujos || []);
+      } else {
+        setFlujosIngreso([]);
+      }
+    } catch (error) {
+      console.error('Error al cargar flujos de ingreso:', error);
+      setFlujosIngreso([]);
+    } finally {
+      setLoadingFlujos(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarFlujos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtros.linea]);
 
   const handleFiltroChange = (
     event: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
@@ -146,11 +189,35 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
       return;
     }
 
-    console.log('✅ Flujo de ingreso listo para guardar:', {
-      filtros,
-      filas: filasConDatos
-    });
-    alert('✅ Flujo de ingreso preparado. Revisa la consola para ver el detalle.');
+    const enviar = async () => {
+      try {
+        const token = localStorage.getItem('erp_token');
+        const response = await fetch(`${API_BASE_URL_CORE}/flujos-ingreso`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            filtros,
+            filas: filasConDatos
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'No se pudo registrar el flujo de ingreso');
+        }
+
+        alert('✅ Flujo de ingreso registrado exitosamente');
+        cargarFlujos();
+      } catch (error: any) {
+        console.error('Error al registrar flujo de ingreso:', error);
+        alert(error.message || 'Error al registrar flujo de ingreso');
+      }
+    };
+
+    enviar();
   };
 
   return (
@@ -181,6 +248,9 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
                   </option>
                 ))}
               </select>
+              {loadingLineas && (
+                <p className="mt-1 text-xs text-gray-500">Cargando líneas...</p>
+              )}
             </div>
 
             <div>
@@ -411,6 +481,31 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
             >
               Guardar flujo de ingreso
             </button>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 md:p-8 space-y-4">
+        <h2 className="text-xl font-semibold text-gray-800">Historial de Flujos de Ingreso</h2>
+        {loadingFlujos ? (
+          <p className="text-gray-500">Cargando flujos...</p>
+        ) : flujosIngreso.length === 0 ? (
+          <p className="text-gray-500">No hay flujos registrados.</p>
+        ) : (
+          <div className="space-y-3">
+            {flujosIngreso.map((flujo: any) => (
+              <div key={flujo.id} className="border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">Flujo #{flujo.id.substring(0, 8)}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(flujo.fecha_envio).toLocaleString('es-ES')} • {flujo.total_filas} filas
+                    </p>
+                  </div>
+                  <span className="text-xs text-gray-500">{flujo.creado_por}</span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
