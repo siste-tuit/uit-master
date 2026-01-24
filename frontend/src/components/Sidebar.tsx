@@ -36,10 +36,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       {/* Sidebar */}
       <div
         className={`
-          !fixed flex flex-col top-0 left-0 min-h-full bg-white shadow-xl z-50 transform transition-all duration-300 ease-in-out
+          !fixed flex flex-col top-0 left-0 h-screen bg-white shadow-xl z-50 transform transition-all duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 lg:static lg:shadow-lg lg:z-auto
-          w-72 border-r border-gray-200 flex-shrink-0
+          w-72 border-r border-gray-200 flex-shrink-0 overflow-y-auto overscroll-contain
         `}
       >
         {/* Header del Sidebar */}
@@ -115,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         )}
 
         {/* Navegación */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 min-h-0 overflow-y-auto">
           {userModules.map((module) => {
             const active = isRouteActive(module.path);
 
