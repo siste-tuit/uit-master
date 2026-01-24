@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserModal } from '@/components/User/UserModal'; // ⬅️ Importa el nuevo componente de modal
+import { useAuth } from '../../context/AuthContext';
 
 // Definición de tipos
 interface UserData {
@@ -24,8 +25,8 @@ const API_ROLES_URL = `${API_BASE_URL_CORE}/roles`;
 const API_DEPARTAMENTOS_URL = `${API_BASE_URL_CORE}/departamentos`;
 
 const AdminUsersPage: React.FC = () => {
-  // Aquí puedes usar useAuth para obtener el token JWT
-  // const { user } = useAuth(); 
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +115,9 @@ const AdminUsersPage: React.FC = () => {
   // --- Handlers de Acciones CRUD ---
 
   const handleCreateUpdate = async (userData: any, isCreating: boolean) => {
+    if (isReadOnly) {
+      return;
+    }
     setError(null);
 
     const method = isCreating ? 'POST' : 'PUT';
@@ -143,6 +147,9 @@ const AdminUsersPage: React.FC = () => {
   };
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
+    if (isReadOnly) {
+      return;
+    }
     setError(null);
     setLoading(true);
 
@@ -168,12 +175,18 @@ const AdminUsersPage: React.FC = () => {
   };
 
   const handleOpenCreateModal = () => {
+    if (isReadOnly) {
+      return;
+    }
     setEditingUser(null);
     setError(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (user: UserData) => {
+    if (isReadOnly) {
+      return;
+    }
     setEditingUser(user);
     setError(null);
     setIsModalOpen(true);
@@ -189,13 +202,15 @@ const AdminUsersPage: React.FC = () => {
         <div className="p-4 bg-white border border-gray-200 shadow-sm lg:col-span-2 rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-800">Usuarios</h2>
-            <button
-              className="px-3 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-              onClick={handleOpenCreateModal}
-              disabled={loading}
-            >
-              Nuevo usuario
-            </button>
+            {!isReadOnly && (
+              <button
+                className="px-3 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+                onClick={handleOpenCreateModal}
+                disabled={loading}
+              >
+                Nuevo usuario
+              </button>
+            )}
           </div>
 
           {error && (
@@ -234,19 +249,25 @@ const AdminUsersPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-2 space-x-2">
-                        <button
-                          className="px-2 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
-                          onClick={() => handleOpenEditModal(u)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className={`px-2 py-1 text-xs text-white rounded ${u.is_active ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-500 hover:bg-gray-600'}`}
-                          onClick={() => handleToggleStatus(u.id, u.is_active)}
-                          disabled={loading}
-                        >
-                          {u.is_active ? 'Desactivar' : 'Activar'}
-                        </button>
+                        {isReadOnly ? (
+                          <span className="text-xs text-gray-400">Solo lectura</span>
+                        ) : (
+                          <>
+                            <button
+                              className="px-2 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700"
+                              onClick={() => handleOpenEditModal(u)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              className={`px-2 py-1 text-xs text-white rounded ${u.is_active ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-500 hover:bg-gray-600'}`}
+                              onClick={() => handleToggleStatus(u.id, u.is_active)}
+                              disabled={loading}
+                            >
+                              {u.is_active ? 'Desactivar' : 'Activar'}
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}

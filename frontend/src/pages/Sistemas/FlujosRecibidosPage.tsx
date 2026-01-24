@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API_BASE_URL_CORE from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface FlujoSalidaRecibido {
   id: string;
@@ -33,6 +34,8 @@ interface FlujoSalidaRecibido {
 }
 
 const FlujosRecibidosPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [flujos, setFlujos] = useState<FlujoSalidaRecibido[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'pendiente' | 'revisado' | 'procesado'>('todos');
@@ -87,6 +90,9 @@ const FlujosRecibidosPage: React.FC = () => {
   };
 
   const actualizarEstado = async (flujoId: string, nuevoEstado: 'pendiente' | 'revisado' | 'procesado') => {
+    if (isReadOnly) {
+      return;
+    }
     try {
       const token = localStorage.getItem('erp_token');
       const response = await fetch(`${API_BASE_URL_CORE}/flujos-salida/${flujoId}/estado`, {
@@ -316,7 +322,7 @@ const FlujosRecibidosPage: React.FC = () => {
                     >
                       {flujoSeleccionado?.id === flujo.id ? '👁️ Ocultar' : '👁️ Ver Detalles'}
                     </button>
-                    {flujo.estado === 'pendiente' && (
+                    {!isReadOnly && flujo.estado === 'pendiente' && (
                       <button
                         onClick={() => actualizarEstado(flujo.id, 'revisado')}
                         className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors text-sm font-semibold"
@@ -324,7 +330,7 @@ const FlujosRecibidosPage: React.FC = () => {
                         👁️ Marcar Revisado
                       </button>
                     )}
-                    {flujo.estado === 'revisado' && (
+                    {!isReadOnly && flujo.estado === 'revisado' && (
                       <button
                         onClick={() => actualizarEstado(flujo.id, 'procesado')}
                         className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-semibold"

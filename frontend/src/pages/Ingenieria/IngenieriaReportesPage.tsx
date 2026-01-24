@@ -3,6 +3,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import API_BASE_URL_CORE from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface ReporteGenerado {
   id: string;
@@ -41,6 +42,8 @@ interface LineaProduccion {
 }
 
 const IngenieriaReportesPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [formReporte, setFormReporte] = useState({
     fecha_inicio: '',
     fecha_fin: '',
@@ -113,6 +116,9 @@ const IngenieriaReportesPage: React.FC = () => {
   };
 
   const generarReporte = () => {
+    if (isReadOnly) {
+      return;
+    }
     // Validaciones
     if (!formReporte.numero_ficha || !formReporte.numero_pedido || !formReporte.cliente || 
         !formReporte.fecha_inicio || !formReporte.fecha_fin || !formReporte.linea_produccion ||
@@ -218,6 +224,9 @@ const IngenieriaReportesPage: React.FC = () => {
   };
 
   const handleEnviarReporte = async () => {
+    if (isReadOnly) {
+      return;
+    }
     if (!reporteGenerado) return;
 
     // Buscar la línea de producción del reporte
@@ -570,6 +579,9 @@ const IngenieriaReportesPage: React.FC = () => {
   };
 
   const generarNuevoReporte = () => {
+    if (isReadOnly) {
+      return;
+    }
     setMostrarFormulario(true);
     setReporteGenerado(null);
     setFormReporte({
@@ -792,14 +804,16 @@ const IngenieriaReportesPage: React.FC = () => {
               </div>
 
               {/* Botón Generar */}
-              <div className="flex justify-center pt-4">
-                <button
-                  onClick={generarReporte}
-                  className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg"
-                >
-                  🚀 Generar Reporte
-                </button>
-              </div>
+              {!isReadOnly && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={generarReporte}
+                    className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg"
+                  >
+                    🚀 Generar Reporte
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -818,18 +832,22 @@ const IngenieriaReportesPage: React.FC = () => {
               >
                 📄 Generar PDF
               </button>
-              <button
-                onClick={handleEnviarReporte}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                📧 Enviar a Producción
-              </button>
-              <button
-                onClick={generarNuevoReporte}
-                className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-colors"
-              >
-                🔄 Nuevo Reporte
-              </button>
+              {!isReadOnly && (
+                <button
+                  onClick={handleEnviarReporte}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  📧 Enviar a Producción
+                </button>
+              )}
+              {!isReadOnly && (
+                <button
+                  onClick={generarNuevoReporte}
+                  className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                >
+                  🔄 Nuevo Reporte
+                </button>
+              )}
             </div>
           </div>
 

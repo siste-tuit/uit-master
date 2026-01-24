@@ -6,6 +6,7 @@ import React, { useState, useMemo } from 'react';
 import { useCalendario, EventoCalendarioData } from '@/context/CalendarioContext';
 import CalendarioFormModal from '@/components/Mantenimiento/CalendarioFromModal';
 import { Label } from '@/components/ui/label'; // Asumo la importación de Label de shadcn/ui
+import { useAuth } from '../../context/AuthContext';
 
 type ModalMode = string | null | 'CREATE_NEW';
 
@@ -20,6 +21,8 @@ const getPriorityColor = (p: EventoCalendarioData['prioridad']) => {
 };
 
 const CalendarioMantenimientoPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   // 1. Usar el contexto para obtener eventos
   const { eventos, loading, error } = useCalendario();
 
@@ -27,8 +30,14 @@ const CalendarioMantenimientoPage: React.FC = () => {
   const [modalEventoId, setModalEventoId] = useState<ModalMode>(null);
 
   // --- Handlers de Modal ---
-  const handleOpenCreateModal = () => setModalEventoId("CREATE_NEW");
-  const handleOpenEditModal = (id: string) => setModalEventoId(id);
+  const handleOpenCreateModal = () => {
+    if (isReadOnly) return;
+    setModalEventoId("CREATE_NEW");
+  };
+  const handleOpenEditModal = (id: string) => {
+    if (isReadOnly) return;
+    setModalEventoId(id);
+  };
   const handleCloseModal = () => setModalEventoId(null);
 
   // --- Lógica de filtrado "Próximos 7 días" ---
@@ -77,8 +86,8 @@ const CalendarioMantenimientoPage: React.FC = () => {
               eventosProximos.map(ev => (
                 <div
                   key={ev.id}
-                  className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
-                  onClick={() => handleOpenEditModal(ev.id)} // ⭐ Abre modal de edición
+                  className={`p-4 border rounded-lg ${isReadOnly ? '' : 'cursor-pointer hover:bg-gray-50'}`}
+                  onClick={isReadOnly ? undefined : () => handleOpenEditModal(ev.id)} // ⭐ Abre modal de edición
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -109,12 +118,14 @@ const CalendarioMantenimientoPage: React.FC = () => {
         <div className="p-6 bg-white rounded-lg shadow">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Acciones rápidas</h2>
           <div className="grid grid-cols-2 gap-4">
-            <button
-              className="p-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-              onClick={handleOpenCreateModal} // ⭐ Abre modal de creación
-            >
-              + Nuevo evento
-            </button>
+            {!isReadOnly && (
+              <button
+                className="p-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                onClick={handleOpenCreateModal} // ⭐ Abre modal de creación
+              >
+                + Nuevo evento
+              </button>
+            )}
             <button className="p-4 text-white bg-green-600 rounded-lg hover:bg-green-700">Importar</button>
             <button className="p-4 text-white bg-orange-600 rounded-lg hover:bg-orange-700">Exportar</button>
             <button className="p-4 text-white bg-purple-600 rounded-lg hover:bg-purple-700">Ver calendario mensual</button>

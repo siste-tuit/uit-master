@@ -1,11 +1,14 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import type { ConfiguracionEmpresa } from "@/types"; // Importamos tu tipo
+import { useAuth } from '../../context/AuthContext';
 
 import API_BASE_URL_CORE from '../../config/api';
 const API_URL = API_BASE_URL_CORE;
 
 const AdminConfigPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [config, setConfig] = useState<ConfiguracionEmpresa | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,6 +45,7 @@ const AdminConfigPage: React.FC = () => {
 
   // 🔹 Guardar cambios
   const handleSave = async () => {
+    if (isReadOnly) return;
     if (!config) return;
     setSaving(true);
     setMessage("");
@@ -82,6 +86,7 @@ const AdminConfigPage: React.FC = () => {
                 name="nombre"
                 value={config.nombre}
                 onChange={handleChange}
+                disabled={isReadOnly}
                 className="w-full px-3 py-2 mt-1 border rounded-lg"
               />
             </label>
@@ -92,6 +97,7 @@ const AdminConfigPage: React.FC = () => {
                 name="ruc"
                 value={config.ruc}
                 onChange={handleChange}
+                disabled={isReadOnly}
                 className="w-full px-3 py-2 mt-1 border rounded-lg"
               />
             </label>
@@ -102,6 +108,7 @@ const AdminConfigPage: React.FC = () => {
                 name="direccion"
                 value={config.direccion}
                 onChange={handleChange}
+                disabled={isReadOnly}
                 className="w-full px-3 py-2 mt-1 border rounded-lg"
               />
             </label>
@@ -112,6 +119,7 @@ const AdminConfigPage: React.FC = () => {
                 name="telefono"
                 value={config.telefono}
                 onChange={handleChange}
+                disabled={isReadOnly}
                 className="w-full px-3 py-2 mt-1 border rounded-lg"
               />
             </label>
@@ -123,6 +131,7 @@ const AdminConfigPage: React.FC = () => {
                 type="email"
                 value={config.email}
                 onChange={handleChange}
+                disabled={isReadOnly}
                 className="w-full px-3 py-2 mt-1 border rounded-lg"
               />
             </label>
@@ -133,6 +142,7 @@ const AdminConfigPage: React.FC = () => {
                 name="moneda"
                 value={config.moneda}
                 onChange={handleChange}
+                disabled={isReadOnly}
                 className="w-full px-3 py-2 mt-1 border rounded-lg"
               >
                 <option value="PEN">PEN</option>
@@ -146,6 +156,7 @@ const AdminConfigPage: React.FC = () => {
                 name="zona_horaria"
                 value={config.zona_horaria}
                 onChange={handleChange}
+                disabled={isReadOnly}
                 className="w-full px-3 py-2 mt-1 border rounded-lg"
               >
                 <option value="America/Lima (GMT-5)">America/Lima (GMT-5)</option>
@@ -153,13 +164,15 @@ const AdminConfigPage: React.FC = () => {
               </select>
             </label>
 
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-3 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
-            >
-              {saving ? "Guardando..." : "Guardar cambios"}
-            </button>
+            {!isReadOnly && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-3 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+              >
+                {saving ? "Guardando..." : "Guardar cambios"}
+              </button>
+            )}
           </div>
         </div>
 

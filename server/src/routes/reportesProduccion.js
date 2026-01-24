@@ -21,7 +21,7 @@ router.post('/pedidos-recibidos/enviar', authenticateToken, authorizeRoles(['ing
 // Usuarios de producción pueden ver sus pedidos recibidos (solo lectura)
 router.get('/pedidos-recibidos/:usuario_id', authenticateToken, authorizeRoles(['usuarios']), getPedidosRecibidosPorUsuario);
 // Obtener lista de usuarios de producción (para Ingeniería)
-router.get('/usuarios-produccion', authenticateToken, authorizeRoles(['ingenieria']), getUsuariosProduccion);
+router.get('/usuarios-produccion', authenticateToken, authorizeRoles(['ingenieria', 'gerencia']), getUsuariosProduccion);
 // Mantener ruta antigua por compatibilidad (deprecated)
 router.post('/pedidos-recibidos', authenticateToken, authorizeRoles(['usuarios']), recibirPedido);
 
@@ -33,7 +33,7 @@ router.post('/reportes-diarios', authenticateToken, authorizeRoles(['usuarios'])
 // Usuarios de producción pueden ver sus reportes (incluyendo los enviados por Ingeniería)
 router.get('/reportes-diarios/usuario/:usuario_id', authenticateToken, authorizeRoles(['usuarios']), getReportesPorUsuario);
 // Ingeniería puede ver todos los reportes
-router.get('/reportes-diarios', authenticateToken, authorizeRoles(['ingenieria']), getTodosLosReportes);
+router.get('/reportes-diarios', authenticateToken, authorizeRoles(['ingenieria', 'gerencia']), getTodosLosReportes);
 
 // Rutas para estadísticas
 // Ruta para estadísticas del usuario (usuarios de producción)

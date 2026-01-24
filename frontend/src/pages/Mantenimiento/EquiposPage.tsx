@@ -5,12 +5,15 @@ import React, { useState } from 'react';
 import { useEquipos, EquipoData } from '@/context/EquipoContext';
 import EquipoFormModal from '@/components/Mantenimiento/EquipoFormModal';
 import { Label } from 'recharts';
+import { useAuth } from '../../context/AuthContext';
 
 // Definimos un nuevo tipo de estado para el control de apertura
 // Usamos "CREATE_NEW" como placeholder para abrir el modal en modo creación.
 type ModalMode = string | null | 'CREATE_NEW';
 
 const EquiposPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const { equipos, loading, error } = useEquipos();
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [filtroLinea, setFiltroLinea] = useState<string>('todas');
@@ -20,8 +23,14 @@ const EquiposPage: React.FC = () => {
 
   // --- Handlers de Modal ---
   // ⭐ CORRECCIÓN: Usamos "CREATE_NEW" para forzar el cambio de estado y abrir el modal.
-  const handleOpenCreateModal = () => setModalEquipoId("CREATE_NEW");
-  const handleOpenEditModal = (id: string) => setModalEquipoId(id);
+  const handleOpenCreateModal = () => {
+    if (isReadOnly) return;
+    setModalEquipoId("CREATE_NEW");
+  };
+  const handleOpenEditModal = (id: string) => {
+    if (isReadOnly) return;
+    setModalEquipoId(id);
+  };
   const handleCloseModal = () => setModalEquipoId(null); // Esto cierra el modal
 
   // Mapeo de ENUMs
@@ -103,14 +112,16 @@ const EquiposPage: React.FC = () => {
           </div>
 
           {/* Botón de Nuevo Equipo */}
-          <div className="flex items-end">
-            <button
-              className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
-              onClick={handleOpenCreateModal} // ⭐ Ahora usa "CREATE_NEW"
-            >
-              + Nuevo Equipo
-            </button>
-          </div>
+          {!isReadOnly && (
+            <div className="flex items-end">
+              <button
+                className="w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                onClick={handleOpenCreateModal} // ⭐ Ahora usa "CREATE_NEW"
+              >
+                + Nuevo Equipo
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -156,17 +167,19 @@ const EquiposPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex mt-4 space-x-2">
-              <button
-                className="flex-1 px-3 py-2 text-sm text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200"
-                onClick={() => handleOpenEditModal(equipo.id)}
-              >
-                Ver Detalles
-              </button>
-              <button className="flex-1 px-3 py-2 text-sm text-green-700 bg-green-100 rounded-md hover:bg-green-200">
-                Crear Orden
-              </button>
-            </div>
+            {!isReadOnly && (
+              <div className="flex mt-4 space-x-2">
+                <button
+                  className="flex-1 px-3 py-2 text-sm text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200"
+                  onClick={() => handleOpenEditModal(equipo.id)}
+                >
+                  Ver Detalles
+                </button>
+                <button className="flex-1 px-3 py-2 text-sm text-green-700 bg-green-100 rounded-md hover:bg-green-200">
+                  Crear Orden
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

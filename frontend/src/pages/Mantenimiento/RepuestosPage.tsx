@@ -5,18 +5,27 @@ import React, { useState } from 'react';
 import { useRepuestos, RepuestoData } from '@/context/RepuestoContext';
 import RepuestoFormModal from '@/components/Mantenimiento/RepuestoFormModal';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '../../context/AuthContext';
 
 type ModalMode = string | null; // Usamos null para cerrado, string (ID o "new") para abierto.
 
 const formatCurrency = (amount: number) => `$${amount.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`;
 
 const RepuestosPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const { repuestos, loading, error } = useRepuestos();
   const [modalRepuestoId, setModalRepuestoId] = useState<ModalMode>(null);
 
   // --- Handlers de Modal ---
-  const handleOpenCreateModal = () => setModalRepuestoId("new"); // Usamos "new" para forzar el cambio de estado
-  const handleOpenEditModal = (id: string) => setModalRepuestoId(id);
+  const handleOpenCreateModal = () => {
+    if (isReadOnly) return;
+    setModalRepuestoId("new");
+  };
+  const handleOpenEditModal = (id: string) => {
+    if (isReadOnly) return;
+    setModalRepuestoId(id);
+  };
   const handleCloseModal = () => setModalRepuestoId(null);
 
   // --- Lógica de Filtros y Totales ---
@@ -92,12 +101,14 @@ const RepuestosPage: React.FC = () => {
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
-          <button
-            className="w-full px-4 py-2 text-white bg-blue-600 rounded-md md:w-40 hover:bg-blue-700"
-            onClick={handleOpenCreateModal}
-          >
-            + Nuevo repuesto
-          </button>
+          {!isReadOnly && (
+            <button
+              className="w-full px-4 py-2 text-white bg-blue-600 rounded-md md:w-40 hover:bg-blue-700"
+              onClick={handleOpenCreateModal}
+            >
+              + Nuevo repuesto
+            </button>
+          )}
         </div>
       </div>
 
@@ -130,12 +141,16 @@ const RepuestosPage: React.FC = () => {
                 <td className="px-4 py-3">{r.proveedor}</td>
                 <td className="px-4 py-3">{formatCurrency(r.costo)}</td>
                 <td className="px-4 py-3">
-                  <button
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                    onClick={() => handleOpenEditModal(r.id)}
-                  >
-                    Editar
-                  </button>
+                  {isReadOnly ? (
+                    <span className="text-xs text-gray-400">Solo lectura</span>
+                  ) : (
+                    <button
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                      onClick={() => handleOpenEditModal(r.id)}
+                    >
+                      Editar
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

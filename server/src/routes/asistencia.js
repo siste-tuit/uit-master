@@ -19,7 +19,7 @@ router.post("/", authorizeRoles('usuarios'), createOrUpdateRegistroAsistencia);
 router.put("/", authorizeRoles('usuarios'), createOrUpdateRegistroAsistencia); // También acepta PUT para actualizar
 
 // Ruta para sistemas (visualizar todo)
-router.get("/admin/global", authorizeRoles('sistemas'), getRegistrosAsistenciaGlobal);
+router.get("/admin/global", authorizeRoles(['sistemas', 'gerencia']), getRegistrosAsistenciaGlobal);
 
 export default router;
 

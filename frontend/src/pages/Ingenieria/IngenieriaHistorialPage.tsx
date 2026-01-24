@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 interface DocumentoHistorial {
   id: string;
@@ -11,6 +12,8 @@ interface DocumentoHistorial {
 }
 
 const IngenieriaHistorialPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [documentos, setDocumentos] = useState<DocumentoHistorial[]>([]);
   const [filtroTiempo, setFiltroTiempo] = useState<'dia' | 'semana' | 'mes' | 'todos'>('todos');
   const [tipoFiltro, setTipoFiltro] = useState<'todos' | 'produccion' | 'reporte'>('todos');
@@ -97,6 +100,9 @@ const IngenieriaHistorialPage: React.FC = () => {
   };
 
   const eliminarDocumento = (id: string) => {
+    if (isReadOnly) {
+      return;
+    }
     if (window.confirm('¿Estás seguro de eliminar este documento del historial?')) {
       const nuevosDocumentos = documentos.filter(d => d.id !== id);
       localStorage.setItem('historial_documentos', JSON.stringify(nuevosDocumentos));
@@ -291,12 +297,14 @@ const IngenieriaHistorialPage: React.FC = () => {
                         >
                           👁️ Ver
                         </button>
-                        <button
-                          onClick={() => eliminarDocumento(documento.id)}
-                          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm font-semibold"
-                        >
-                          🗑️ Eliminar
-                        </button>
+                        {!isReadOnly && (
+                          <button
+                            onClick={() => eliminarDocumento(documento.id)}
+                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm font-semibold"
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

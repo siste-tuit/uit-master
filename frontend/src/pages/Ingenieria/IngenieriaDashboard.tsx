@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import API_BASE_URL_CORE from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface LineaProduccion {
   id: string;
@@ -13,6 +14,8 @@ interface LineaProduccion {
 }
 
 const IngenieriaDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [lineasProduccion, setLineasProduccion] = useState<LineaProduccion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -167,6 +170,9 @@ const IngenieriaDashboard: React.FC = () => {
 
   // Función para abrir modal de registro
   const handleRegistrarProduccion = (linea: LineaProduccion) => {
+    if (isReadOnly) {
+      return;
+    }
     setLineaSeleccionada(linea);
     setFormData({
       cantidad_producida: linea.produccionActual.toString(),
@@ -181,6 +187,9 @@ const IngenieriaDashboard: React.FC = () => {
 
   // Función para guardar producción
   const handleGuardarProduccion = async () => {
+    if (isReadOnly) {
+      return;
+    }
     if (!lineaSeleccionada || !formData.cantidad_producida || !formData.cantidad_objetivo) {
       alert('Por favor completa todos los campos obligatorios');
       return;
@@ -474,20 +483,22 @@ const IngenieriaDashboard: React.FC = () => {
               </div>
 
               {/* Botón para registrar producción */}
-              <button
-                onClick={() => handleRegistrarProduccion(linea)}
-                className="w-full mt-3 sm:mt-4 bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm sm:text-base"
-                disabled={linea.status === 'detenida'}
-              >
-                📝 Registrar Producción
-              </button>
+              {!isReadOnly && (
+                <button
+                  onClick={() => handleRegistrarProduccion(linea)}
+                  className="w-full mt-3 sm:mt-4 bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm sm:text-base"
+                  disabled={linea.status === 'detenida'}
+                >
+                  📝 Registrar Producción
+                </button>
+              )}
           </div>
         ))}
         </div>
       </div>
 
       {/* Modal para registrar producción */}
-      {showModal && lineaSeleccionada && (
+      {!isReadOnly && showModal && lineaSeleccionada && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
           <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 w-full max-w-lg mx-auto overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-start mb-4">

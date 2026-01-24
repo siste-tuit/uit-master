@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo } from 'react';
 import { useUsuarios } from '@/context/UsuariosContext'; 
+import { useAuth } from '../../context/AuthContext';
 // Asumiendo que UserModal está en el mismo lugar que la página anterior, lo importamos:
 import { UserModal } from '@/components/User/UserModal'; 
 
@@ -72,6 +73,8 @@ const mapUsuarioToUserData = (usuario: Usuario, roles: any[], departamentos: any
 };
 
 const UsuariosPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   // 1. Usar el hook del contexto
   const {
     users: usersContext,
@@ -144,11 +147,17 @@ const UsuariosPage: React.FC = () => {
   // --- Handlers de Acciones CRUD del Contexto ---
 
   const handleOpenCreateModal = () => {
+    if (isReadOnly) {
+      return;
+    }
     setEditingUser(null);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (usuario: Usuario) => {
+    if (isReadOnly) {
+      return;
+    }
     // Mapear el formato de la vista al formato de la API (UserData) para pasar al Modal
     const userToEdit = usersContext.find(u => u.id === usuario.id); 
     setEditingUser(userToEdit || null);
@@ -157,6 +166,9 @@ const UsuariosPage: React.FC = () => {
 
   // Usamos handleCreateUpdate del contexto
   const handleSaveUser = async (userData: any) => {
+    if (isReadOnly) {
+      return;
+    }
     const isCreating = !userData.id;
     try {
         await handleCreateUpdate(userData, isCreating);
@@ -169,6 +181,9 @@ const UsuariosPage: React.FC = () => {
 
   // Usamos handleToggleStatus del contexto
   const handleCambiarEstado = async (userId: string, nuevoEstado: string) => {
+    if (isReadOnly) {
+      return;
+    }
     const userContextData = usersContext.find(u => u.id === userId);
     
     if (!userContextData) return;
@@ -194,6 +209,9 @@ const UsuariosPage: React.FC = () => {
   };
 
   const handleEliminarUsuario = (usuarioId: string) => {
+    if (isReadOnly) {
+      return;
+    }
     if (window.confirm('¿Estás seguro de que quieres ELIMINAR este usuario? Esta acción es permanente. (Funcionalidad DELETE faltante en el contexto/API)')) {
       // Si tu API/Contexto tuviera un `handleDelete(userId)`, se llamaría aquí:
       // try {
@@ -346,13 +364,15 @@ const UsuariosPage: React.FC = () => {
               </select>
             </div>
 
-            <button
-              onClick={handleOpenCreateModal} // Nuevo handler para abrir el modal de creación
-              className="flex items-center px-6 py-2 space-x-2 font-medium text-white transition-colors rounded-lg bg-primary-600 hover:bg-primary-700"
-            >
-              <span>➕</span>
-              <span>Nuevo Usuario</span>
-            </button>
+            {!isReadOnly && (
+              <button
+                onClick={handleOpenCreateModal} // Nuevo handler para abrir el modal de creación
+                className="flex items-center px-6 py-2 space-x-2 font-medium text-white transition-colors rounded-lg bg-primary-600 hover:bg-primary-700"
+              >
+                <span>➕</span>
+                <span>Nuevo Usuario</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -416,29 +436,33 @@ const UsuariosPage: React.FC = () => {
                       {usuario.ultimoAcceso.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleOpenEditModal(usuario)} // Nuevo handler para abrir el modal de edición
-                          className="text-primary-600 hover:text-primary-900"
-                        >
-                          Editar
-                        </button>
-                        <select
-                          value={usuario.estado}
-                          onChange={(e) => handleCambiarEstado(usuario.id, e.target.value)}
-                          className="px-2 py-1 text-xs border border-gray-300 rounded"
-                        >
-                          <option value="activo">Activar</option>
-                          <option value="inactivo">Desactivar</option>
-                          <option value="suspendido">Suspender</option>
-                        </select>
-                        <button
-                          onClick={() => handleEliminarUsuario(usuario.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
+                      {isReadOnly ? (
+                        <span className="text-xs text-gray-400">Solo lectura</span>
+                      ) : (
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleOpenEditModal(usuario)} // Nuevo handler para abrir el modal de edición
+                            className="text-primary-600 hover:text-primary-900"
+                          >
+                            Editar
+                          </button>
+                          <select
+                            value={usuario.estado}
+                            onChange={(e) => handleCambiarEstado(usuario.id, e.target.value)}
+                            className="px-2 py-1 text-xs border border-gray-300 rounded"
+                          >
+                            <option value="activo">Activar</option>
+                            <option value="inactivo">Desactivar</option>
+                            <option value="suspendido">Suspender</option>
+                          </select>
+                          <button
+                            onClick={() => handleEliminarUsuario(usuario.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -510,7 +534,7 @@ const UsuariosPage: React.FC = () => {
         </div>
 
         {/* Modal para Crear/Editar */}
-        {isModalOpen && (
+        {!isReadOnly && isModalOpen && (
             <UserModal
                 // El modal espera el usuario a editar en el formato UserData
                 user={editingUser} 

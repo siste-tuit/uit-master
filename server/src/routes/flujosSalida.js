@@ -16,7 +16,7 @@ router.post('/enviar', authenticateToken, authorizeRoles(['ingenieria']), enviar
 router.get('/usuarios-sistemas', authenticateToken, authorizeRoles(['ingenieria']), getUsuariosSistemas);
 
 // Sistemas puede ver sus flujos recibidos
-router.get('/recibidos', authenticateToken, authorizeRoles(['sistemas']), getFlujosRecibidos);
+router.get('/recibidos', authenticateToken, authorizeRoles(['sistemas', 'gerencia']), getFlujosRecibidos);
 
 // Sistemas puede actualizar el estado de un flujo
 router.put('/:id/estado', authenticateToken, authorizeRoles(['sistemas']), actualizarEstadoFlujo);

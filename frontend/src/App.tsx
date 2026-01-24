@@ -24,7 +24,6 @@ import ContabilidadFinanzasPage from './pages/Contabilidad/ContabilidadFinanzasP
 import ContabilidadFacturacionPage from './pages/Contabilidad/ContabilidadFacturacionPage';
 import ContabilidadReportesPage from './pages/Contabilidad/ContabilidadReportesPage';
 import GerenciaProduccionPage from './pages/Gerencia/GerenciaProduccionPage';
-import GerenciaVentasPage from './pages/Gerencia/GerenciaVentasPage';
 import GerenciaInventarioPage from './pages/Gerencia/GerenciaInventarioPage';
 import UsuarioDashboard from './pages/Produccion/UsuarioDashboard';
 import UsuarioMiProduccionPage from './pages/Produccion/UsuarioMiProduccionPage';
@@ -76,7 +75,7 @@ function App() {
                               <Route
                                 path="administracion/dashboard"
                                 element={
-                                  <ProtectedRoute allowedRoles={['administrador']}>
+                                  <ProtectedRoute allowedRoles={['administrador', 'gerencia']}>
                                     <AdminDashboard />
                                   </ProtectedRoute>
                                 }
@@ -84,7 +83,7 @@ function App() {
                               <Route
                                 path="administracion/users"
                                 element={
-                                  <ProtectedRoute allowedRoles={['administrador']}>
+                                  <ProtectedRoute allowedRoles={['administrador', 'gerencia']}>
                                     <AdminUsersPage />
                                   </ProtectedRoute>
                                 }
@@ -92,7 +91,7 @@ function App() {
                               <Route
                                 path="administracion/config"
                                 element={
-                                  <ProtectedRoute allowedRoles={['administrador']}>
+                                  <ProtectedRoute allowedRoles={['administrador', 'gerencia']}>
                                     <AdminConfigPage />
                                   </ProtectedRoute>
                                 }
@@ -100,7 +99,7 @@ function App() {
                               <Route
                                 path="administracion/reports"
                                 element={
-                                  <ProtectedRoute allowedRoles={['administrador']}>
+                                  <ProtectedRoute allowedRoles={['administrador', 'gerencia']}>
                                     <AdminReportsPage />
                                   </ProtectedRoute>
                                 }
@@ -109,7 +108,7 @@ function App() {
                               <Route
                                 path="sistemas/dashboard"
                                 element={
-                                  <ProtectedRoute allowedRoles={['sistemas']}>
+                                  <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
                                     <SistemasDashboard />
                                   </ProtectedRoute>
                                 }
@@ -118,7 +117,7 @@ function App() {
                               <Route
                                 path="sistemas/incidencias"
                                 element={
-                                  <ProtectedRoute allowedRoles={['sistemas']}>
+                                  <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
                                     <IncidenciasPage />
                                   </ProtectedRoute>
                                 }
@@ -127,7 +126,7 @@ function App() {
                               <Route
                                 path="sistemas/flujos-recibidos"
                                 element={
-                                  <ProtectedRoute allowedRoles={['sistemas']}>
+                                  <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
                                     <FlujosRecibidosPage />
                                   </ProtectedRoute>
                                 }
@@ -135,7 +134,7 @@ function App() {
                               <Route
                                 path="sistemas/asistencia"
                                 element={
-                                  <ProtectedRoute allowedRoles={['sistemas']}>
+                                  <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
                                     <AsistenciaGlobalPage />
                                   </ProtectedRoute>
                                 }
@@ -144,7 +143,7 @@ function App() {
                               <Route
                                 path="sistemas/usuarios"
                                 element={
-                                  <ProtectedRoute allowedRoles={['sistemas']}>
+                                  <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
                                     <UsuariosPage />
                                   </ProtectedRoute>
                                 }
@@ -153,7 +152,7 @@ function App() {
                               <Route
                                 path="sistemas/configuracion"
                                 element={
-                                  <ProtectedRoute allowedRoles={['sistemas']}>
+                                  <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
                                     <ConfiguracionPage />
                                   </ProtectedRoute>
                                 }
@@ -162,7 +161,7 @@ function App() {
                               <Route
                                 path="sistemas/logs"
                                 element={
-                                  <ProtectedRoute allowedRoles={['sistemas']}>
+                                  <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
                                     <LogsPage />
                                   </ProtectedRoute>
                                 }
@@ -171,7 +170,7 @@ function App() {
                               <Route
                                 path="mantenimiento/dashboard"
                                 element={
-                                  <ProtectedRoute allowedRoles={['mantenimiento']}>
+                                  <ProtectedRoute allowedRoles={['mantenimiento', 'gerencia']}>
                                     <MantenimientoDashboard />
                                   </ProtectedRoute>
                                 }
@@ -180,7 +179,7 @@ function App() {
                               <Route
                                 path="mantenimiento/equipos"
                                 element={
-                                  <ProtectedRoute allowedRoles={['mantenimiento']}>
+                                  <ProtectedRoute allowedRoles={['mantenimiento', 'gerencia']}>
                                     <EquiposPage />
                                   </ProtectedRoute>
                                 }
@@ -189,7 +188,7 @@ function App() {
                               <Route
                                 path="mantenimiento/ordenes"
                                 element={
-                                  <ProtectedRoute allowedRoles={['mantenimiento']}>
+                                  <ProtectedRoute allowedRoles={['mantenimiento', 'gerencia']}>
                                     <OrdenesTrabajoPage />
                                   </ProtectedRoute>
                                 }
@@ -198,7 +197,7 @@ function App() {
                               <Route
                                 path="mantenimiento/repuestos"
                                 element={
-                                  <ProtectedRoute allowedRoles={['mantenimiento']}>
+                                  <ProtectedRoute allowedRoles={['mantenimiento', 'gerencia']}>
                                     <RepuestosPage />
                                   </ProtectedRoute>
                                 }
@@ -207,7 +206,7 @@ function App() {
                               <Route
                                 path="mantenimiento/calendario"
                                 element={
-                                  <ProtectedRoute allowedRoles={['mantenimiento']}>
+                                  <ProtectedRoute allowedRoles={['mantenimiento', 'gerencia']}>
                                     <CalendarioMantenimientoPage />
                                   </ProtectedRoute>
                                 }
@@ -216,7 +215,7 @@ function App() {
                               <Route
                                 path="contabilidad/dashboard"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadDashboard />
                                   </ProtectedRoute>
                                 }
@@ -224,7 +223,7 @@ function App() {
                               <Route
                                 path="contabilidad/finances"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadFinanzasPage />
                                   </ProtectedRoute>
                                 }
@@ -232,7 +231,7 @@ function App() {
                               <Route
                                 path="contabilidad/billing"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadFacturacionPage />
                                   </ProtectedRoute>
                                 }
@@ -240,7 +239,7 @@ function App() {
                               <Route
                                 path="contabilidad/reports"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadReportesPage />
                                   </ProtectedRoute>
                                 }
@@ -258,7 +257,7 @@ function App() {
                                 path="gerencia/sales"
                                 element={
                                   <ProtectedRoute allowedRoles={['gerencia']}>
-                                    <GerenciaVentasPage />
+                                    <Navigate to="/gerencia/production" replace />
                                   </ProtectedRoute>
                                 }
                               />
@@ -274,7 +273,7 @@ function App() {
                               <Route
                                 path="ingenieria/dashboard"
                                 element={
-                                  <ProtectedRoute allowedRoles={['ingenieria']}>
+                                  <ProtectedRoute allowedRoles={['ingenieria', 'gerencia']}>
                                     <IngenieriaDashboard />
                                   </ProtectedRoute>
                                 }
@@ -282,7 +281,7 @@ function App() {
                               <Route
                                 path="ingenieria/produccion"
                                 element={
-                                  <ProtectedRoute allowedRoles={['ingenieria']}>
+                                  <ProtectedRoute allowedRoles={['ingenieria', 'gerencia']}>
                                     <IngenieriaProduccionPage />
                                   </ProtectedRoute>
                                 }
@@ -290,7 +289,7 @@ function App() {
                               <Route
                                 path="ingenieria/reportes"
                                 element={
-                                  <ProtectedRoute allowedRoles={['ingenieria']}>
+                                  <ProtectedRoute allowedRoles={['ingenieria', 'gerencia']}>
                                     <IngenieriaReportesPage />
                                   </ProtectedRoute>
                                 }
@@ -298,7 +297,7 @@ function App() {
                               <Route
                                 path="ingenieria/ficha-entrega"
                                 element={
-                                  <ProtectedRoute allowedRoles={['ingenieria']}>
+                                  <ProtectedRoute allowedRoles={['ingenieria', 'gerencia']}>
                                     <IngenieriaFichaEntregaPage />
                                   </ProtectedRoute>
                                 }
@@ -306,7 +305,7 @@ function App() {
                               <Route
                                 path="ingenieria/ficha-salida"
                                 element={
-                                  <ProtectedRoute allowedRoles={['ingenieria']}>
+                                  <ProtectedRoute allowedRoles={['ingenieria', 'gerencia']}>
                                     <IngenieriaFichaSalidaPage />
                                   </ProtectedRoute>
                                 }
@@ -314,7 +313,7 @@ function App() {
                               <Route
                                 path="ingenieria/inventario"
                                 element={
-                                  <ProtectedRoute allowedRoles={['ingenieria']}>
+                                  <ProtectedRoute allowedRoles={['ingenieria', 'gerencia']}>
                                     <IngenieriaInventarioPage />
                                   </ProtectedRoute>
                                 }
@@ -322,7 +321,7 @@ function App() {
                               <Route
                                 path="ingenieria/historial"
                                 element={
-                                  <ProtectedRoute allowedRoles={['ingenieria']}>
+                                  <ProtectedRoute allowedRoles={['ingenieria', 'gerencia']}>
                                     <IngenieriaHistorialPage />
                                   </ProtectedRoute>
                                 }
@@ -330,7 +329,7 @@ function App() {
                               <Route
                                 path="ingenieria/reportes-usuarios"
                                 element={
-                                  <ProtectedRoute allowedRoles={['ingenieria']}>
+                                  <ProtectedRoute allowedRoles={['ingenieria', 'gerencia']}>
                                     <IngenieriaReportesUsuariosPage />
                                   </ProtectedRoute>
                                 }

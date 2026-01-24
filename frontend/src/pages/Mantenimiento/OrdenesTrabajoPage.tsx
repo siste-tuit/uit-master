@@ -4,10 +4,13 @@
 import React, { useState } from 'react';
 import { useOrdenesTrabajo, OrdenTrabajoData } from '@/context/OrdenContext';
 import OrdenFormModal from '@/components/Mantenimiento/OrdenFormModal';
+import { useAuth } from '../../context/AuthContext';
 
 type ModalMode = string | null | 'CREATE_NEW';
 
 const OrdenesTrabajoPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const { ordenes, loading, error } = useOrdenesTrabajo();
 
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
@@ -15,8 +18,14 @@ const OrdenesTrabajoPage: React.FC = () => {
 
   const [modalOrdenId, setModalOrdenId] = useState<ModalMode>(null);
 
-  const handleOpenCreateModal = () => setModalOrdenId("CREATE_NEW");
-  const handleOpenEditModal = (id: string) => setModalOrdenId(id);
+  const handleOpenCreateModal = () => {
+    if (isReadOnly) return;
+    setModalOrdenId("CREATE_NEW");
+  };
+  const handleOpenEditModal = (id: string) => {
+    if (isReadOnly) return;
+    setModalOrdenId(id);
+  };
   const handleCloseModal = () => setModalOrdenId(null);
 
   const getPrioridadColor = (prioridad: OrdenTrabajoData['prioridad']) => {
@@ -98,12 +107,14 @@ const OrdenesTrabajoPage: React.FC = () => {
               <option value="baja">Baja</option>
             </select>
           </div>
-          <button
-            onClick={handleOpenCreateModal}
-            className="px-6 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
-          >
-            + Nueva Orden
-          </button>
+          {!isReadOnly && (
+            <button
+              onClick={handleOpenCreateModal}
+              className="px-6 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              + Nueva Orden
+            </button>
+          )}
         </div>
       </div>
 
@@ -164,20 +175,22 @@ const OrdenesTrabajoPage: React.FC = () => {
               </div>
             )}
 
-            <div className="flex mt-4 space-x-2">
-              <button
-                className="px-4 py-2 text-sm text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200"
-                onClick={() => handleOpenEditModal(orden.id)}
-              >
-                Ver Detalles
-              </button>
-              <button className="px-4 py-2 text-sm text-green-700 bg-green-100 rounded-md hover:bg-green-200">
-                Actualizar Estado
-              </button>
-              <button className="px-4 py-2 text-sm text-orange-700 bg-orange-100 rounded-md hover:bg-orange-200">
-                Editar
-              </button>
-            </div>
+            {!isReadOnly && (
+              <div className="flex mt-4 space-x-2">
+                <button
+                  className="px-4 py-2 text-sm text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200"
+                  onClick={() => handleOpenEditModal(orden.id)}
+                >
+                  Ver Detalles
+                </button>
+                <button className="px-4 py-2 text-sm text-green-700 bg-green-100 rounded-md hover:bg-green-200">
+                  Actualizar Estado
+                </button>
+                <button className="px-4 py-2 text-sm text-orange-700 bg-orange-100 rounded-md hover:bg-orange-200">
+                  Editar
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

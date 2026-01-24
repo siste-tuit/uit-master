@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import API_BASE_URL_CORE from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
 
 // Función helper para cargar imágenes
 const loadImage = (src: string): Promise<HTMLImageElement | null> => {
@@ -62,6 +63,8 @@ const USUARIOS_PRODUCCION_ESTATICOS: Omit<UsuarioProduccion, 'id' | 'linea_id' |
 ];
 
 const IngenieriaProduccionPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [formData, setFormData] = useState<PedidoData>({
     cliente: '',
     ficha: '',
@@ -208,6 +211,9 @@ const IngenieriaProduccionPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      return;
+    }
     
     if (!usuarioSeleccionado) {
       alert('⚠️ Por favor selecciona un usuario de producción para enviar el pedido');
@@ -760,13 +766,15 @@ const IngenieriaProduccionPage: React.FC = () => {
 
           {/* Botones */}
           <div className="flex gap-4 mt-6">
-            <button
-              type="submit"
-              disabled={enviando || !usuarioSeleccionado}
-              className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {enviando ? '⏳ Enviando...' : '📤 Enviar Pedido a Usuario'}
-            </button>
+            {!isReadOnly && (
+              <button
+                type="submit"
+                disabled={enviando || !usuarioSeleccionado}
+                className="flex-1 bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {enviando ? '⏳ Enviando...' : '📤 Enviar Pedido a Usuario'}
+              </button>
+            )}
             <button
               type="button"
               onClick={handleGeneratePDF}

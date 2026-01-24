@@ -1,7 +1,10 @@
 import React from 'react';
 import { financialRecords } from '../../data/mockData';
+import { useAuth } from '../../context/AuthContext';
 
 const ContabilidadFinanzasPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const totalIngresos = financialRecords.filter(r => r.type === 'ingreso').reduce((s, r) => s + r.amount, 0);
   const totalEgresos = financialRecords.filter(r => r.type !== 'ingreso').reduce((s, r) => s + r.amount, 0);
   const utilidad = totalIngresos - totalEgresos;
@@ -31,7 +34,9 @@ const ContabilidadFinanzasPage: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-800">Registros recientes</h2>
-          <button className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Nuevo registro</button>
+          {!isReadOnly && (
+            <button className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Nuevo registro</button>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">

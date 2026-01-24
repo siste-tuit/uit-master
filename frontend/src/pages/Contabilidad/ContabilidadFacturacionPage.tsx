@@ -1,6 +1,9 @@
 import React from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 const ContabilidadFacturacionPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -12,7 +15,9 @@ const ContabilidadFacturacionPage: React.FC = () => {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-800">Facturas</h2>
-            <button className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Nueva factura</button>
+            {!isReadOnly && (
+              <button className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Nueva factura</button>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">

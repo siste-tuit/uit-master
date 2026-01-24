@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 type TipoCampo = 'text' | 'number' | 'boolean' | 'select' | 'password';
 
@@ -53,6 +54,8 @@ const categoriasIniciales: CategoriaConfig[] = [
 ];
 
 const ConfiguracionPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [categorias, setCategorias] = useState<CategoriaConfig[]>(categoriasIniciales);
   const [activa, setActiva] = useState<string>(categoriasIniciales[0].id);
   const [cambios, setCambios] = useState<Record<string, unknown>>({});
@@ -60,6 +63,9 @@ const ConfiguracionPage: React.FC = () => {
   const categoriaActual = useMemo(() => categorias.find(c => c.id === activa)!, [categorias, activa]);
 
   const onChangeCampo = (catId: string, campo: CampoConfig, nuevo: unknown) => {
+    if (isReadOnly) {
+      return;
+    }
     setCategorias(prev => prev.map(c => {
       if (c.id !== catId) return c;
       return {
@@ -71,6 +77,9 @@ const ConfiguracionPage: React.FC = () => {
   };
 
   const onGuardar = () => {
+    if (isReadOnly) {
+      return;
+    }
     if (Object.keys(cambios).length === 0) {
       alert('No hay cambios para guardar.');
       return;
@@ -81,6 +90,9 @@ const ConfiguracionPage: React.FC = () => {
   };
 
   const onRevertir = () => {
+    if (isReadOnly) {
+      return;
+    }
     setCategorias(categoriasIniciales);
     setCambios({});
   };
@@ -92,10 +104,12 @@ const ConfiguracionPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">⚙️ Configuración del Sistema</h1>
           <p className="text-gray-600">Edita parámetros críticos del sistema</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={onRevertir} className="px-4 py-2 text-gray-700 bg-gray-100 border rounded-lg hover:bg-gray-200">Revertir</button>
-          <button onClick={onGuardar} className={`px-4 py-2 rounded-lg text-white ${Object.keys(cambios).length ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`} disabled={!Object.keys(cambios).length}>Guardar ({Object.keys(cambios).length})</button>
-        </div>
+        {!isReadOnly && (
+          <div className="flex gap-2">
+            <button onClick={onRevertir} className="px-4 py-2 text-gray-700 bg-gray-100 border rounded-lg hover:bg-gray-200">Revertir</button>
+            <button onClick={onGuardar} className={`px-4 py-2 rounded-lg text-white ${Object.keys(cambios).length ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`} disabled={!Object.keys(cambios).length}>Guardar ({Object.keys(cambios).length})</button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
@@ -129,6 +143,7 @@ const ConfiguracionPage: React.FC = () => {
                     type={c.tipo}
                     value={String(c.valor)}
                     onChange={(e) => onChangeCampo(categoriaActual.id, c, c.tipo === 'number' ? Number(e.target.value) : e.target.value)}
+                    disabled={isReadOnly}
                     className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                 ) : c.tipo === 'boolean' ? (
@@ -137,6 +152,7 @@ const ConfiguracionPage: React.FC = () => {
                       type="checkbox"
                       checked={Boolean(c.valor)}
                       onChange={(e) => onChangeCampo(categoriaActual.id, c, e.target.checked)}
+                      disabled={isReadOnly}
                       className="w-4 h-4"
                     />
                     <span className="text-gray-600">{c.descripcion}</span>
@@ -145,6 +161,7 @@ const ConfiguracionPage: React.FC = () => {
                   <select
                     value={String(c.valor)}
                     onChange={(e) => onChangeCampo(categoriaActual.id, c, e.target.value)}
+                    disabled={isReadOnly}
                     className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   >
                     {(c.opciones || []).map(op => (

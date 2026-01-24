@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 interface FlujoIngresoRow {
   fecha: string;
@@ -67,6 +68,8 @@ const crearFilaVacia = (lineaPorDefecto: string): FlujoIngresoRow => ({
 });
 
 const IngenieriaFichaEntregaPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const hoy = useMemo(() => new Date(), []);
   const filtrosIniciales: FiltrosFlujoIngreso = {
     anio: hoy.getFullYear().toString(),
@@ -109,19 +112,31 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
   };
 
   const agregarFila = () => {
+    if (isReadOnly) {
+      return;
+    }
     setFilas((prev) => [...prev, crearFilaVacia(filtros.linea)]);
   };
 
   const eliminarFila = (index: number) => {
+    if (isReadOnly) {
+      return;
+    }
     setFilas((prev) => prev.filter((_, filaIndex) => filaIndex !== index));
   };
 
   const limpiarTodo = () => {
+    if (isReadOnly) {
+      return;
+    }
     setFiltros(filtrosIniciales);
     setFilas([crearFilaVacia('')]);
   };
 
   const guardarListado = () => {
+    if (isReadOnly) {
+      return;
+    }
     const filasConDatos = filas.filter(
       (fila) => fila.fecha && fila.linea && fila.ficha && fila.cliente && fila.prendas
     );
@@ -219,13 +234,15 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Registro de ingresos</h2>
-            <button
-              type="button"
-              onClick={agregarFila}
-              className="px-4 py-2 rounded-lg bg-secondary-600 text-white font-semibold hover:bg-secondary-700 transition-colors"
-            >
-              + Agregar fila
-            </button>
+            {!isReadOnly && (
+              <button
+                type="button"
+                onClick={agregarFila}
+                className="px-4 py-2 rounded-lg bg-secondary-600 text-white font-semibold hover:bg-secondary-700 transition-colors"
+              >
+                + Agregar fila
+              </button>
+            )}
           </div>
 
           <div className="overflow-x-auto">
@@ -360,14 +377,16 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
                       />
                     </td>
                     <td className="px-3 py-2 border-b border-gray-200 text-center">
-                      <button
-                        type="button"
-                        onClick={() => eliminarFila(index)}
-                        className="px-3 py-1 text-sm text-red-600 font-semibold hover:text-red-700 transition-colors"
-                        disabled={filas.length === 1}
-                      >
-                        Quitar
-                      </button>
+                      {!isReadOnly && (
+                        <button
+                          type="button"
+                          onClick={() => eliminarFila(index)}
+                          className="px-3 py-1 text-sm text-red-600 font-semibold hover:text-red-700 transition-colors"
+                          disabled={filas.length === 1}
+                        >
+                          Quitar
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -376,22 +395,24 @@ const IngenieriaFichaEntregaPage: React.FC = () => {
           </div>
         </section>
 
-        <div className="flex flex-col md:flex-row gap-3 justify-end">
-          <button
-            type="button"
-            onClick={limpiarTodo}
-            className="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-colors"
-          >
-            Limpiar todo
-          </button>
-          <button
-            type="button"
-            onClick={guardarListado}
-            className="px-6 py-3 rounded-lg bg-secondary-600 text-white font-semibold hover:bg-secondary-700 transition-colors"
-          >
-            Guardar flujo de ingreso
-          </button>
-        </div>
+        {!isReadOnly && (
+          <div className="flex flex-col md:flex-row gap-3 justify-end">
+            <button
+              type="button"
+              onClick={limpiarTodo}
+              className="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-colors"
+            >
+              Limpiar todo
+            </button>
+            <button
+              type="button"
+              onClick={guardarListado}
+              className="px-6 py-3 rounded-lg bg-secondary-600 text-white font-semibold hover:bg-secondary-700 transition-colors"
+            >
+              Guardar flujo de ingreso
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

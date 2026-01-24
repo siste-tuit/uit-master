@@ -315,7 +315,6 @@ const getPageTitle = (): string => {
   
   if (path.includes('/gerencia')) {
     if (path.includes('/production')) return 'Producción - Vista Gerencial';
-    if (path.includes('/sales')) return 'Ventas - Vista Gerencial';
     if (path.includes('/inventory')) return 'Inventario - Vista Gerencial';
     return 'Gerencia';
   }

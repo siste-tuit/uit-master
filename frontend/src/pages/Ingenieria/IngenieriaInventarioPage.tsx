@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API_BASE_URL_CORE from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface InventoryItem {
   id: string;
@@ -15,6 +16,8 @@ interface InventoryItem {
 }
 
 const IngenieriaInventarioPage: React.FC = () => {
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'gerencia';
   const [searchTerm, setSearchTerm] = useState('');
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,6 +96,9 @@ const IngenieriaInventarioPage: React.FC = () => {
   };
 
   const abrirFormularioNuevo = () => {
+    if (isReadOnly) {
+      return;
+    }
     setModoEdicion(false);
     setItemActual(null);
     setFormData({
@@ -109,6 +115,9 @@ const IngenieriaInventarioPage: React.FC = () => {
   };
 
   const abrirFormularioEdicion = (item: InventoryItem) => {
+    if (isReadOnly) {
+      return;
+    }
     setModoEdicion(true);
     setItemActual(item);
     setFormData({
@@ -142,6 +151,9 @@ const IngenieriaInventarioPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      return;
+    }
     
     const currentStock = parseFloat(formData.currentStock);
     const minStock = parseFloat(formData.minStock);
@@ -244,6 +256,9 @@ const IngenieriaInventarioPage: React.FC = () => {
   };
 
   const handleEliminar = async (id: string) => {
+    if (isReadOnly) {
+      return;
+    }
     if (window.confirm('¿Estás seguro de eliminar este ítem?')) {
       try {
         const response = await fetch(`${API_BASE_URL_CORE}/inventario/items/${id}`, {
@@ -311,7 +326,7 @@ const IngenieriaInventarioPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800">📦 Gestión de Inventario</h1>
           <p className="text-gray-600 mt-1">Control y seguimiento de materiales textiles y productos terminados.</p>
         </div>
-        {!mostrarFormulario && (
+        {!mostrarFormulario && !isReadOnly && (
           <button
             onClick={abrirFormularioNuevo}
             className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-md"
@@ -341,7 +356,7 @@ const IngenieriaInventarioPage: React.FC = () => {
         </div>
       </div>
 
-      {mostrarFormulario && (
+      {mostrarFormulario && !isReadOnly && (
         /* Formulario de Agregar/Editar */
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-6">
           <div className="flex justify-between items-center mb-6">
@@ -590,20 +605,24 @@ const IngenieriaInventarioPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => abrirFormularioEdicion(item)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        onClick={() => handleEliminar(item.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
-                      >
-                        🗑️ Eliminar
-                      </button>
-                    </div>
+                    {isReadOnly ? (
+                      <span className="text-xs text-gray-400">Solo lectura</span>
+                    ) : (
+                      <div className="flex justify-center gap-2">
+                        <button
+                          onClick={() => abrirFormularioEdicion(item)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => handleEliminar(item.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors text-sm font-semibold"
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
