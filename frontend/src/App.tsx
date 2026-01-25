@@ -12,7 +12,6 @@ import IncidenciasPage from './pages/Sistemas/IncidenciasPage';
 import FlujosRecibidosPage from './pages/Sistemas/FlujosRecibidosPage';
 import AsistenciaGlobalPage from './pages/Sistemas/AsistenciaGlobalPage';
 import UsuariosPage from './pages/Sistemas/UsuariosPage';
-import ConfiguracionPage from './pages/Sistemas/ConfiguracionPage';
 import LogsPage from './pages/Sistemas/LogsPage';
 import MantenimientoDashboard from './pages/Mantenimiento/MantenimientoDashboard';
 import EquiposPage from './pages/Mantenimiento/EquiposPage';
@@ -145,15 +144,6 @@ function App() {
                                 element={
                                   <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
                                     <UsuariosPage />
-                                  </ProtectedRoute>
-                                }
-                              />
-
-                              <Route
-                                path="sistemas/configuracion"
-                                element={
-                                  <ProtectedRoute allowedRoles={['sistemas', 'gerencia']}>
-                                    <ConfiguracionPage />
                                   </ProtectedRoute>
                                 }
                               />
