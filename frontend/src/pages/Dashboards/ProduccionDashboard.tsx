@@ -17,6 +17,17 @@ interface ProduccionRegistro {
   feedback?: string | null;
 }
 
+type Trend = 'up' | 'down' | 'stable';
+
+interface MetricItem {
+  id: string;
+  title: string;
+  value: number;
+  unit: string;
+  trend: Trend;
+  percentage: number;
+}
+
 interface LineaProduccion {
   id: string;
   nombre: string;
@@ -97,14 +108,14 @@ const ProduccionDashboard: React.FC = () => {
     );
   }, [lineas, user?.name, user?.email]);
 
-  const metrics = useMemo(
+  const metrics: MetricItem[] = useMemo(
     () => [
       {
         id: 'producido',
         title: 'Total producido',
         value: metricas.totalProducido || 0,
         unit: 'unidades',
-        trend: 'stable' as const,
+        trend: 'stable',
         percentage: 0
       },
       {
@@ -112,7 +123,7 @@ const ProduccionDashboard: React.FC = () => {
         title: 'Órdenes recibidas',
         value: metricas.totalOrdenes || 0,
         unit: 'ordenes',
-        trend: 'stable' as const,
+        trend: 'stable',
         percentage: 0
       },
       {
@@ -120,7 +131,7 @@ const ProduccionDashboard: React.FC = () => {
         title: 'Registros enviados',
         value: registros.length,
         unit: 'reportes',
-        trend: 'stable' as const,
+        trend: 'stable',
         percentage: 0
       }
     ],
@@ -306,19 +317,19 @@ const ProduccionDashboard: React.FC = () => {
                     {formatDateTime(record.fecha || record.timestamp || '')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {record.product}
+                    {record.producto}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {record.quantity} unidades
+                    {record.cantidad} unidades
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`font-medium ${getQualityColor(record.quality)}`}>
-                      {(record.quality || 'buena').charAt(0).toUpperCase() + (record.quality || 'buena').slice(1)}
+                    <span className={`font-medium ${getQualityColor(record.calidad || 'buena')}`}>
+                      {(record.calidad || 'buena').charAt(0).toUpperCase() + (record.calidad || 'buena').slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(record.status)}`}>
-                      {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(record.estado)}`}>
+                      {record.estado.charAt(0).toUpperCase() + record.estado.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
@@ -357,7 +368,7 @@ const ProduccionDashboard: React.FC = () => {
               </div>
               <div className="pt-2 border-t border-gray-200">
                 <span className="text-xs text-gray-500">
-                  Estado: {line.status.charAt(0).toUpperCase() + line.status.slice(1)}
+                  Estado: {(line.status || 'desconocido').charAt(0).toUpperCase() + (line.status || 'desconocido').slice(1)}
                 </span>
               </div>
             </div>

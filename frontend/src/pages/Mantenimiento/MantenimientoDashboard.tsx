@@ -152,7 +152,6 @@ const MantenimientoDashboard: React.FC = () => {
               <div className="ml-3">
                 <p className="text-xs font-medium text-gray-600">{metric.title}</p>
                 <p className="text-lg font-bold text-gray-900">{metric.value} {metric.unit}</p>
-                <p className="text-xs text-green-600">{metric.percentage > 0 ? '+' : ''}{metric.percentage}%</p>
               </div>
             </div>
           </div>
