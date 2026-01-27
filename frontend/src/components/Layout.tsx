@@ -37,13 +37,13 @@ const Layout: React.FC = () => {
           {/* Contenido */}
           <main
             className={`overflow-x-hidden w-full ${
-              isGerencia ? 'p-3 sm:p-4 lg:p-3 xl:p-4 text-[15px]' : 'p-4 sm:p-5 lg:p-4 xl:p-6'
+              isGerencia ? 'p-2 sm:p-3 lg:p-2 xl:p-3 text-[14px]' : 'p-4 sm:p-5 lg:p-4 xl:p-6'
             }`}
           >
             <div
               className={`w-full ${
                 isGerencia
-                  ? 'max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] mx-0'
+                  ? 'max-w-[1100px] xl:max-w-[1200px] 2xl:max-w-[1280px] mx-0'
                   : 'max-w-full lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-320px)] 2xl:max-w-[1400px]'
               }`}
             >
