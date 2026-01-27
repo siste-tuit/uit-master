@@ -155,33 +155,33 @@ const GerenciaProduccionPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 space-y-4 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">🏭 Producción - Vista Gerencial</h1>
-        <p className="text-gray-600">Reportes diarios, semanales y mensuales de producción proporcionados por el área de Ingeniería</p>
+      <div className="mb-4">
+        <h1 className="text-xl font-bold text-gray-800">🏭 Producción - Vista Gerencial</h1>
+        <p className="text-sm text-gray-600">Reportes diarios, semanales y mensuales de producción proporcionados por el área de Ingeniería</p>
       </div>
 
       {/* Métricas Totales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-500 mb-2">Total Producido</p>
-          <p className="text-3xl font-bold text-green-600">{data.totales.total_producido.toLocaleString('es-PE')}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Total Producido</p>
+          <p className="text-2xl font-bold text-green-600">{data.totales.total_producido.toLocaleString('es-PE')}</p>
           <p className="text-xs text-gray-400 mt-1">unidades</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-500 mb-2">Total Defectuoso</p>
-          <p className="text-3xl font-bold text-red-600">{data.totales.total_defectuoso.toLocaleString('es-PE')}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Total Defectuoso</p>
+          <p className="text-2xl font-bold text-red-600">{data.totales.total_defectuoso.toLocaleString('es-PE')}</p>
           <p className="text-xs text-gray-400 mt-1">unidades</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-500 mb-2">Total Neto</p>
-          <p className="text-3xl font-bold text-blue-600">{data.totales.total_neto.toLocaleString('es-PE')}</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Total Neto</p>
+          <p className="text-2xl font-bold text-blue-600">{data.totales.total_neto.toLocaleString('es-PE')}</p>
           <p className="text-xs text-gray-400 mt-1">unidades</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <p className="text-sm text-gray-500 mb-2">Porcentaje de Calidad</p>
-          <p className={`text-3xl font-bold ${getCalidadColor(data.totales.porcentaje_calidad)}`}>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Porcentaje de Calidad</p>
+          <p className={`text-2xl font-bold ${getCalidadColor(data.totales.porcentaje_calidad)}`}>
             {data.totales.porcentaje_calidad}%
           </p>
           <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
@@ -198,10 +198,10 @@ const GerenciaProduccionPage: React.FC = () => {
       </div>
 
       {/* Producción Diaria (Últimos 7 días) */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">📅 Producción Diaria (Últimos 7 días)</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <h2 className="text-lg font-bold text-gray-800 mb-3">📅 Producción Diaria (Últimos 7 días)</h2>
         {data.diarios.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={data.diarios}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -209,7 +209,7 @@ const GerenciaProduccionPage: React.FC = () => {
                 tickFormatter={formatFecha}
                 angle={-45}
                 textAnchor="end"
-                height={80}
+                height={60}
               />
               <YAxis />
               <Tooltip 
@@ -233,31 +233,31 @@ const GerenciaProduccionPage: React.FC = () => {
       </div>
 
       {/* Producción Semanal (Últimas 4 semanas) */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">📊 Producción Semanal (Últimas 4 semanas)</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <h2 className="text-lg font-bold text-gray-800 mb-3">📊 Producción Semanal (Últimas 4 semanas)</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {data.semanales.map((semana, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">
+            <div key={index} className="border border-gray-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-gray-700 mb-1">
                 Semana {semana.semana}
               </p>
-              <p className="text-xs text-gray-500 mb-3">
+              <p className="text-xs text-gray-500 mb-2">
                 {formatFecha(semana.fecha_inicio)} - {formatFecha(semana.fecha_fin)}
               </p>
               <div className="space-y-2">
                 <div>
                   <p className="text-xs text-gray-500">Neto</p>
-                  <p className="text-lg font-bold text-blue-600">{semana.cantidad_neta.toLocaleString('es-PE')}</p>
+                  <p className="text-base font-bold text-blue-600">{semana.cantidad_neta.toLocaleString('es-PE')}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Calidad</p>
-                  <p className={`text-lg font-bold ${getCalidadColor(semana.porcentaje_calidad)}`}>
+                  <p className={`text-base font-bold ${getCalidadColor(semana.porcentaje_calidad)}`}>
                     {semana.porcentaje_calidad}%
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Promedio Diario</p>
-                  <p className="text-sm font-semibold text-gray-700">{semana.promedio_diario.toLocaleString('es-PE')}</p>
+                  <p className="text-xs font-semibold text-gray-700">{semana.promedio_diario.toLocaleString('es-PE')}</p>
                 </div>
               </div>
             </div>
