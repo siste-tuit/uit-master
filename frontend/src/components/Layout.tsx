@@ -8,6 +8,7 @@ import { NotificationProvider } from '../context/NotificationContext';
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const isGerencia = user?.role === 'gerencia';
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -34,8 +35,18 @@ const Layout: React.FC = () => {
           </div>
 
           {/* Contenido */}
-          <main className="p-4 sm:p-5 lg:p-4 xl:p-6 overflow-x-hidden w-full">
-            <div className="w-full max-w-full lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-320px)] 2xl:max-w-[1400px]">
+          <main
+            className={`overflow-x-hidden w-full ${
+              isGerencia ? 'p-3 sm:p-4 lg:p-3 xl:p-4 text-[15px]' : 'p-4 sm:p-5 lg:p-4 xl:p-6'
+            }`}
+          >
+            <div
+              className={`w-full ${
+                isGerencia
+                  ? 'max-w-6xl xl:max-w-7xl mx-auto'
+                  : 'max-w-full lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-320px)] 2xl:max-w-[1400px]'
+              }`}
+            >
               <Outlet />
             </div>
           </main>
