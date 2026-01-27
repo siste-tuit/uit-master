@@ -9,13 +9,13 @@ $errors = @()
 $warnings = @()
 $success = @()
 
-function Add-Success { param([string]$msg) $script:success += $msg; Write-Host "✅ $msg" -ForegroundColor Green }
-function Add-Warning { param([string]$msg) $script:warnings += $msg; Write-Host "⚠️  $msg" -ForegroundColor Yellow }
-function Add-Error { param([string]$msg) $script:errors += $msg; Write-Host "❌ $msg" -ForegroundColor Red }
+function Add-Success { param([string]$msg) $script:success += $msg; Write-Host "[OK] $msg" -ForegroundColor Green }
+function Add-Warning { param([string]$msg) $script:warnings += $msg; Write-Host "[WARN] $msg" -ForegroundColor Yellow }
+function Add-Error { param([string]$msg) $script:errors += $msg; Write-Host "[ERROR] $msg" -ForegroundColor Red }
 
-Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "🧪 TESTING FINAL COMPLETO - Sistema UIT" -ForegroundColor Green
-Write-Host "═══════════════════════════════════════════════════`n" -ForegroundColor Cyan
+Write-Host "===================================================" -ForegroundColor Cyan
+Write-Host "TESTING FINAL COMPLETO - Sistema UIT" -ForegroundColor Green
+Write-Host "===================================================`n" -ForegroundColor Cyan
 
 # 1. Verificar Estructura de Archivos
 Write-Host "1. VERIFICANDO ESTRUCTURA DE ARCHIVOS..." -ForegroundColor Cyan
@@ -39,13 +39,13 @@ foreach ($file in $requiredFiles) {
 }
 
 # 2. Verificar URLs Hardcodeadas
-Write-Host "`n2. VERIFICANDO URLs HARDCODEADAS..." -ForegroundColor Cyan
+Write-Host "`n2. VERIFICANDO URLS HARDCODEADAS..." -ForegroundColor Cyan
 Write-Host ""
 
 $hardcodedUrls = Select-String -Path "frontend/src/**/*.tsx" -Pattern "http://localhost:5000" -ErrorAction SilentlyContinue
 if ($hardcodedUrls) {
     $count = ($hardcodedUrls | Measure-Object).Count
-    Add-Warning "Encontradas $count URLs hardcodeadas (deberían usar API_BASE_URL_CORE)"
+    Add-Warning "Encontradas $count URLs hardcodeadas (deberian usar API_BASE_URL_CORE)"
     foreach ($match in $hardcodedUrls | Select-Object -First 5) {
         Write-Host "   - $($match.Filename):$($match.LineNumber)" -ForegroundColor Gray
     }
@@ -53,16 +53,16 @@ if ($hardcodedUrls) {
     Add-Success "No se encontraron URLs hardcodeadas"
 }
 
-# 3. Verificar Configuración API
+# 3. Verificar Configuracion API
 Write-Host "`n3. VERIFICANDO CONFIGURACION API..." -ForegroundColor Cyan
 Write-Host ""
 
 if (Test-Path "frontend/src/config/api.ts") {
     $apiConfig = Get-Content "frontend/src/config/api.ts" -Raw
     if ($apiConfig -match "VITE_API_URL|API_BASE_URL") {
-        Add-Success "Configuración de API centralizada encontrada"
+        Add-Success "Configuracion de API centralizada encontrada"
     } else {
-        Add-Error "Configuración de API no encontrada correctamente"
+        Add-Error "Configuracion de API no encontrada correctamente"
     }
 } else {
     Add-Error "Archivo frontend/src/config/api.ts no existe"
@@ -83,7 +83,7 @@ try {
     Add-Warning "Backend no disponible en $BaseUrl (puede estar apagado)"
 }
 
-# 5. Verificar Autenticación
+# 5. Verificar Autenticacion
 Write-Host "`n5. VERIFICANDO AUTENTICACION..." -ForegroundColor Cyan
 Write-Host ""
 
@@ -96,16 +96,16 @@ try {
     $loginResponse = Invoke-RestMethod -Uri "$BaseUrl/api/auth/login" -Method POST -Body $loginBody -ContentType "application/json" -ErrorAction Stop
     
     if ($loginResponse.token) {
-        Add-Success "Autenticación funcionando correctamente"
+        Add-Success "Autenticacion funcionando correctamente"
         $global:Token = $loginResponse.token
     } else {
         Add-Error "Login no devuelve token"
     }
 } catch {
-    Add-Warning "No se pudo probar autenticación: $_"
+    Add-Warning "No se pudo probar autenticacion: $_"
 }
 
-# 6. Verificar Endpoints Críticos
+# 6. Verificar Endpoints Criticos
 Write-Host "`n6. VERIFICANDO ENDPOINTS CRITICOS..." -ForegroundColor Cyan
 Write-Host ""
 
@@ -145,7 +145,7 @@ if (Test-Path "server/runAllMigrations.js") {
 }
 
 if (Test-Path "server/src/scripts/migrate.js") {
-    Add-Success "Script de migración core existe"
+    Add-Success "Script de migracion core existe"
 } else {
     Add-Error "Script migrate.js no encontrado"
 }
@@ -177,7 +177,7 @@ if (Test-Path "frontend/.env.example") {
     Add-Warning "Archivo frontend/.env.example no existe"
 }
 
-# 10. Verificar Archivos de Documentación
+# 10. Verificar Archivos de Documentacion
 Write-Host "`n10. VERIFICANDO DOCUMENTACION..." -ForegroundColor Cyan
 Write-Host ""
 
@@ -189,38 +189,38 @@ $docs = @(
 
 foreach ($doc in $docs) {
     if (Test-Path $doc) {
-        Add-Success "Documentación existe: $doc"
+        Add-Success "Documentacion existe: $doc"
     } else {
-        Add-Warning "Documentación faltante: $doc"
+        Add-Warning "Documentacion faltante: $doc"
     }
 }
 
 # RESUMEN FINAL
-Write-Host "`n═══════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "📊 RESUMEN DEL TESTING" -ForegroundColor Green
-Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "`n===================================================" -ForegroundColor Cyan
+Write-Host "RESUMEN DEL TESTING" -ForegroundColor Green
+Write-Host "===================================================" -ForegroundColor Cyan
 Write-Host ""
 
 $totalTests = $success.Count + $warnings.Count + $errors.Count
 Write-Host "Total de pruebas: $totalTests" -ForegroundColor White
-Write-Host "✅ Exitosas: $($success.Count)" -ForegroundColor Green
-Write-Host "⚠️  Advertencias: $($warnings.Count)" -ForegroundColor Yellow
-Write-Host "❌ Errores: $($errors.Count)" -ForegroundColor Red
+Write-Host "Exitosas: $($success.Count)" -ForegroundColor Green
+Write-Host "Advertencias: $($warnings.Count)" -ForegroundColor Yellow
+Write-Host "Errores: $($errors.Count)" -ForegroundColor Red
 
 if ($errors.Count -eq 0) {
-    Write-Host "`n🎉 SISTEMA LISTO PARA PRODUCCIÓN" -ForegroundColor Green
+    Write-Host "`nSISTEMA LISTO PARA PRODUCCION" -ForegroundColor Green
     if ($warnings.Count -gt 0) {
-        Write-Host "⚠️  Tienes $($warnings.Count) advertencias menores que revisar" -ForegroundColor Yellow
+        Write-Host "Tienes $($warnings.Count) advertencias menores que revisar" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "`n⚠️  HAY ERRORES QUE CORREGIR ANTES DE PRODUCCIÓN" -ForegroundColor Red
+    Write-Host "`nHAY ERRORES QUE CORREGIR ANTES DE PRODUCCION" -ForegroundColor Red
     Write-Host "`nErrores encontrados:" -ForegroundColor Red
     foreach ($error in $errors) {
         Write-Host "  - $error" -ForegroundColor Red
     }
 }
 
-Write-Host "`n═══════════════════════════════════════════════════`n" -ForegroundColor Cyan
+Write-Host "`n===================================================`n" -ForegroundColor Cyan
 
 # Exit code
 if ($errors.Count -eq 0) {

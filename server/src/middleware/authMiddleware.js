@@ -4,7 +4,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mi_secreto_super_seguro_y_largo';
+const JWT_SECRET = process.env.JWT_SECRET;
+const isDev = process.env.NODE_ENV !== 'production';
+
+if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET no configurado en el entorno');
+}
 
 /**
  * Middleware para verificar el token JWT
@@ -59,10 +64,11 @@ export const authenticateToken = async (req, res, next) => {
             role: userRoleNormalizado // Siempre usar el normalizado
         };
 
-        // Log para depuración (eliminar en producción)
-        console.log(`✅ [authenticateToken] Usuario autenticado: ${users[0].email}`);
-        console.log(`   - Rol original en BD: "${userRole}"`);
-        console.log(`   - Rol normalizado guardado: "${userRoleNormalizado}"`);
+        if (isDev) {
+            console.log(`[authenticateToken] Usuario autenticado: ${users[0].email}`);
+            console.log(`   - Rol original en BD: "${userRole}"`);
+            console.log(`   - Rol normalizado guardado: "${userRoleNormalizado}"`);
+        }
 
         next();
     } catch (error) {
@@ -95,7 +101,9 @@ export const authenticateToken = async (req, res, next) => {
 export const authorizeRoles = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {
-            console.log('❌ [authorizeRoles] Autorización fallida: Usuario no autenticado');
+            if (isDev) {
+                console.log('[authorizeRoles] Autorizacion fallida: Usuario no autenticado');
+            }
             return res.status(401).json({ 
                 success: false,
                 message: 'Usuario no autenticado' 
@@ -120,27 +128,32 @@ export const authorizeRoles = (...allowedRoles) => {
             return rol;
         });
 
-        // Log para depuración
-        console.log(`🔍 [authorizeRoles] Verificando autorización:`);
-        console.log(`   - Usuario: ${req.user.email}`);
-        console.log(`   - Rol del usuario (ya normalizado): "${userRole}"`);
-        console.log(`   - Roles permitidos (originales):`, rolesPermitidos);
-        console.log(`   - Roles permitidos (normalizados):`, rolesPermitidosNormalizados);
-        console.log(`   - ¿El rol "${userRole}" está en la lista? ${rolesPermitidosNormalizados.includes(userRole)}`);
+        if (isDev) {
+            console.log(`[authorizeRoles] Verificando autorizacion:`);
+            console.log(`   - Usuario: ${req.user.email}`);
+            console.log(`   - Rol del usuario (ya normalizado): "${userRole}"`);
+            console.log(`   - Roles permitidos (originales):`, rolesPermitidos);
+            console.log(`   - Roles permitidos (normalizados):`, rolesPermitidosNormalizados);
+            console.log(`   - Rol permitido: ${rolesPermitidosNormalizados.includes(userRole)}`);
+        }
 
         // Verificar si el rol del usuario está en la lista de roles permitidos
         if (!userRole || !rolesPermitidosNormalizados.includes(userRole)) {
-            console.log(`❌ [authorizeRoles] Autorización fallida:`);
-            console.log(`   - Usuario: ${req.user.email}`);
-            console.log(`   - Rol del usuario: "${userRole}"`);
-            console.log(`   - Roles requeridos:`, rolesPermitidosNormalizados);
+            if (isDev) {
+                console.log(`[authorizeRoles] Autorizacion fallida:`);
+                console.log(`   - Usuario: ${req.user.email}`);
+                console.log(`   - Rol del usuario: "${userRole}"`);
+                console.log(`   - Roles requeridos:`, rolesPermitidosNormalizados);
+            }
             return res.status(403).json({ 
                 success: false,
                 message: `No tienes permisos para acceder a este recurso. Tu rol: ${userRole || 'sin rol'}` 
             });
         }
 
-        console.log(`✅ [authorizeRoles] Autorización exitosa - Usuario: ${req.user.email}, Rol: ${userRole}`);
+        if (isDev) {
+            console.log(`[authorizeRoles] Autorizacion exitosa - Usuario: ${req.user.email}, Rol: ${userRole}`);
+        }
         next();
     };
 };

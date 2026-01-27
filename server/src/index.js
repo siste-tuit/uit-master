@@ -36,6 +36,11 @@ app.get("/ping", async (req, res) => {
     res.json(rows[0]);
 });
 
+// Health check liviano (no depende de la BD)
+app.get("/health", (req, res) => {
+    res.json({ status: "ok", uptime: process.uptime() });
+});
+
 // 🔐 Rutas de autenticación
 app.use("/api/auth", authRoutes);
 // Rutas de Usuario
