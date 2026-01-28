@@ -308,7 +308,10 @@ const getPageTitle = (): string => {
   }
   
   if (path.includes('/contabilidad')) {
-    return 'Dashboard Contabilidad';
+    if (path.includes('/planilla')) return 'Planilla';
+    if (path.includes('/inventario')) return 'Inventario';
+    if (path.includes('/facturas')) return 'Facturas';
+    return 'Dashboard general';
   }
   
   if (path.includes('/gerencia')) {

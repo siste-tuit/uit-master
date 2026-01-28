@@ -61,7 +61,10 @@ export const roleModules = {
     { name: 'Inventario', path: '/gerencia/inventory', icon: '📦' },
   ],
   contabilidad: [
-    { name: 'Dashboard', path: '/contabilidad/dashboard', icon: '📊' },
+    { name: 'Dashboard general', path: '/contabilidad/dashboard', icon: '📊' },
+    { name: 'Planilla', path: '/contabilidad/planilla', icon: '🧾' },
+    { name: 'Inventario', path: '/contabilidad/inventario', icon: '📦' },
+    { name: 'Facturas', path: '/contabilidad/facturas', icon: '💳' },
   ],
   usuarios: [
     { name: 'Dashboard', path: '/produccion/dashboard', icon: '📊' },

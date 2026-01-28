@@ -19,6 +19,9 @@ import OrdenesTrabajoPage from './pages/Mantenimiento/OrdenesTrabajoPage';
 import RepuestosPage from './pages/Mantenimiento/RepuestosPage';
 import CalendarioMantenimientoPage from './pages/Mantenimiento/CalendarioMantenimientoPage';
 import ContabilidadDashboard from './pages/Contabilidad/ContabilidadDashboard';
+import ContabilidadPlanillaPage from './pages/Contabilidad/ContabilidadPlanillaPage';
+import ContabilidadInventarioPage from './pages/Contabilidad/ContabilidadInventarioPage';
+import ContabilidadFacturasPage from './pages/Contabilidad/ContabilidadFacturasPage';
 import GerenciaProduccionPage from './pages/Gerencia/GerenciaProduccionPage';
 import GerenciaInventarioPage from './pages/Gerencia/GerenciaInventarioPage';
 import UsuarioDashboard from './pages/Produccion/UsuarioDashboard';
@@ -202,8 +205,32 @@ function App() {
                               <Route
                                 path="contabilidad/dashboard"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad']}>
                                     <ContabilidadDashboard />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path="contabilidad/planilla"
+                                element={
+                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                    <ContabilidadPlanillaPage />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path="contabilidad/inventario"
+                                element={
+                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                    <ContabilidadInventarioPage />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path="contabilidad/facturas"
+                                element={
+                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                    <ContabilidadFacturasPage />
                                   </ProtectedRoute>
                                 }
                               />

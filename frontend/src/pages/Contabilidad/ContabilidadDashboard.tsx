@@ -41,6 +41,13 @@ interface RegistroFinanciero {
   fecha: string;
   status: 'pendiente' | 'aprobado' | 'rechazado';
 }
+
+interface DashboardResponse {
+  metricas: MetricasFinancieras;
+  ingresosMensuales: IngresosMensuales;
+  inventarioResumen: InventarioResumen;
+  registrosRecientes: RegistroFinanciero[];
+}
 // Componente de gráfico de barras simple
 const SimpleBarChart: React.FC<{ data: any[]; dataKey: string; color: string; title: string }> = ({ data, dataKey, color, title }) => {
   if (!data.length) {
@@ -96,29 +103,19 @@ const ContabilidadDashboard: React.FC = () => {
     const token = localStorage.getItem('erp_token');
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-    const fetchJson = async (url: string) => {
-      const res = await fetch(url, { headers });
-      if (!res.ok) throw new Error(`Error ${res.status} en ${url}`);
-      return res.json();
-    };
-
     const cargarDatos = async () => {
       try {
         setLoading(true);
         setError(null);
-        const results = await Promise.allSettled([
-          fetchJson(`${API_BASE_URL_CORE}/contabilidad/metricas`),
-          fetchJson(`${API_BASE_URL_CORE}/contabilidad/ingresos-mensuales`),
-          fetchJson(`${API_BASE_URL_CORE}/inventario/resumen-departamentos`),
-          fetchJson(`${API_BASE_URL_CORE}/contabilidad/registros?limit=10`)
-        ]);
+        const res = await fetch(`${API_BASE_URL_CORE}/contabilidad/dashboard`, { headers });
+        if (!res.ok) throw new Error(`Error ${res.status} en dashboard contabilidad`);
+        const data: DashboardResponse = await res.json();
 
         if (!isMounted) return;
-
-        if (results[0].status === 'fulfilled') setMetricas(results[0].value);
-        if (results[1].status === 'fulfilled') setIngresosMensuales(results[1].value);
-        if (results[2].status === 'fulfilled') setResumenInventario(results[2].value);
-        if (results[3].status === 'fulfilled') setRegistros(results[3].value || []);
+        setMetricas(data.metricas);
+        setIngresosMensuales(data.ingresosMensuales);
+        setResumenInventario(data.inventarioResumen);
+        setRegistros(data.registrosRecientes || []);
       } catch (err: any) {
         if (!isMounted) return;
         setError(err.message || 'Error al cargar datos');
