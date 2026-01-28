@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import jsPDF from 'jspdf';
 import API_BASE_URL_CORE from '../../config/api';
 
 interface Factura {
@@ -63,6 +64,44 @@ const ContabilidadFacturasPage: React.FC = () => {
     } catch (err: any) {
       setError(err.message || 'Error al crear factura');
     }
+  };
+
+  const handleExportarFacturaPDF = (factura: Factura) => {
+    const pdf = new jsPDF();
+    const margin = 14;
+    let y = 20;
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(16);
+    pdf.text('FACTURA', margin, y);
+    y += 10;
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+    const rows = [
+      ['Referencia', factura.referencia],
+      ['Categoria', factura.categoria],
+      ['Monto', `S/ ${Number(factura.monto).toFixed(2)}`],
+      ['Fecha', factura.fecha],
+      ['Estado', factura.status],
+      ['Descripcion', factura.descripcion || '-']
+    ];
+
+    rows.forEach(([label, value]) => {
+      pdf.text(`${label}:`, margin, y);
+      pdf.text(String(value), margin + 40, y);
+      y += 7;
+      if (y > 270) {
+        pdf.addPage();
+        y = 20;
+      }
+    });
+
+    pdf.setFontSize(9);
+    pdf.text(`Generado: ${new Date().toLocaleString('es-PE')}`, margin, y + 8);
+
+    const fileName = `Factura_${factura.referencia || factura.id.substring(0, 8)}.pdf`;
+    pdf.save(fileName);
   };
 
   return (
@@ -132,6 +171,7 @@ const ContabilidadFacturasPage: React.FC = () => {
                   <th className="py-2 pr-4">Fecha</th>
                   <th className="py-2 pr-4">Estado</th>
                   <th className="py-2">Descripción</th>
+                  <th className="py-2 text-right">PDF</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,6 +183,14 @@ const ContabilidadFacturasPage: React.FC = () => {
                     <td className="py-2 pr-4">{factura.fecha}</td>
                     <td className="py-2 pr-4">{factura.status}</td>
                     <td className="py-2">{factura.descripcion || '-'}</td>
+                    <td className="py-2 text-right">
+                      <button
+                        onClick={() => handleExportarFacturaPDF(factura)}
+                        className="text-xs px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        PDF
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
