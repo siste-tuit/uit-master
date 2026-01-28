@@ -19,9 +19,6 @@ import OrdenesTrabajoPage from './pages/Mantenimiento/OrdenesTrabajoPage';
 import RepuestosPage from './pages/Mantenimiento/RepuestosPage';
 import CalendarioMantenimientoPage from './pages/Mantenimiento/CalendarioMantenimientoPage';
 import ContabilidadDashboard from './pages/Contabilidad/ContabilidadDashboard';
-import ContabilidadFinanzasPage from './pages/Contabilidad/ContabilidadFinanzasPage';
-import ContabilidadFacturacionPage from './pages/Contabilidad/ContabilidadFacturacionPage';
-import ContabilidadReportesPage from './pages/Contabilidad/ContabilidadReportesPage';
 import GerenciaProduccionPage from './pages/Gerencia/GerenciaProduccionPage';
 import GerenciaInventarioPage from './pages/Gerencia/GerenciaInventarioPage';
 import UsuarioDashboard from './pages/Produccion/UsuarioDashboard';
@@ -207,30 +204,6 @@ function App() {
                                 element={
                                   <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadDashboard />
-                                  </ProtectedRoute>
-                                }
-                              />
-                              <Route
-                                path="contabilidad/finances"
-                                element={
-                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
-                                    <ContabilidadFinanzasPage />
-                                  </ProtectedRoute>
-                                }
-                              />
-                              <Route
-                                path="contabilidad/billing"
-                                element={
-                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
-                                    <ContabilidadFacturacionPage />
-                                  </ProtectedRoute>
-                                }
-                              />
-                              <Route
-                                path="contabilidad/reports"
-                                element={
-                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
-                                    <ContabilidadReportesPage />
                                   </ProtectedRoute>
                                 }
                               />

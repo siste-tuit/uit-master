@@ -57,17 +57,11 @@ export const roleModules = {
     { name: 'Mantenimiento - Repuestos', path: '/mantenimiento/repuestos', icon: '🔩' },
     { name: 'Mantenimiento - Calendario', path: '/mantenimiento/calendario', icon: '📅' },
     { name: 'Contabilidad - Dashboard', path: '/contabilidad/dashboard', icon: '💰' },
-    { name: 'Contabilidad - Finanzas', path: '/contabilidad/finances', icon: '💳' },
-    { name: 'Contabilidad - Facturación', path: '/contabilidad/billing', icon: '🧾' },
-    { name: 'Contabilidad - Reportes', path: '/contabilidad/reports', icon: '📈' },
     { name: 'Producción', path: '/gerencia/production', icon: '🏭' },
     { name: 'Inventario', path: '/gerencia/inventory', icon: '📦' },
   ],
   contabilidad: [
     { name: 'Dashboard', path: '/contabilidad/dashboard', icon: '📊' },
-    { name: 'Finanzas', path: '/contabilidad/finances', icon: '💳' },
-    { name: 'Facturación', path: '/contabilidad/billing', icon: '🧾' },
-    { name: 'Reportes', path: '/contabilidad/reports', icon: '📈' },
   ],
   usuarios: [
     { name: 'Dashboard', path: '/produccion/dashboard', icon: '📊' },

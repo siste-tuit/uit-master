@@ -308,8 +308,6 @@ const getPageTitle = (): string => {
   }
   
   if (path.includes('/contabilidad')) {
-    if (path.includes('/billing')) return 'Facturación';
-    if (path.includes('/finances')) return 'Finanzas';
     return 'Dashboard Contabilidad';
   }
   
