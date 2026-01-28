@@ -43,7 +43,7 @@ const Layout: React.FC = () => {
             <div
               className={`w-full ${
                 isGerencia
-                  ? 'max-w-[1040px] xl:max-w-[1160px] 2xl:max-w-[1240px] mx-auto'
+                  ? 'max-w-[980px] xl:max-w-[1080px] 2xl:max-w-[1160px] mx-0'
                   : 'max-w-full lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-320px)] 2xl:max-w-[1400px]'
               }`}
             >
