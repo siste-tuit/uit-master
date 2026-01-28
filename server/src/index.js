@@ -15,7 +15,6 @@ import ordenesRoutes from "./routes/ordenes.js";
 import repuestosRoutes from "./routes/repuestos.js";
 import calendarioRoutes from "./routes/calendario.js";
 import produccionRoutes from "./routes/produccion.js";
-import contabilidadRoutes from "./routes/contabilidad.js";
 import inventarioRoutes from "./routes/inventario.js";
 import incidenciasRoutes from "./routes/incidencias.js";
 import reportesProduccionRoutes from "./routes/reportesProduccion.js";
@@ -65,8 +64,6 @@ app.use("/api/calendario", calendarioRoutes);
 app.use("/api/produccion", produccionRoutes);
 // 📋 Rutas de Reportes de Producción
 app.use("/api/reportes-produccion", reportesProduccionRoutes);
-// 💰 Rutas de Contabilidad
-app.use("/api/contabilidad", contabilidadRoutes);
 // 📦 Rutas de Inventario
 app.use("/api/inventario", inventarioRoutes);
 // 🐛 Rutas de Incidencias
