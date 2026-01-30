@@ -205,7 +205,7 @@ function App() {
                               <Route
                                 path="contabilidad/dashboard"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadDashboard />
                                   </ProtectedRoute>
                                 }
@@ -213,7 +213,7 @@ function App() {
                               <Route
                                 path="contabilidad/planilla"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadPlanillaPage />
                                   </ProtectedRoute>
                                 }
@@ -221,7 +221,7 @@ function App() {
                               <Route
                                 path="contabilidad/inventario"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadInventarioPage />
                                   </ProtectedRoute>
                                 }
@@ -229,7 +229,7 @@ function App() {
                               <Route
                                 path="contabilidad/facturas"
                                 element={
-                                  <ProtectedRoute allowedRoles={['contabilidad']}>
+                                  <ProtectedRoute allowedRoles={['contabilidad', 'gerencia']}>
                                     <ContabilidadFacturasPage />
                                   </ProtectedRoute>
                                 }

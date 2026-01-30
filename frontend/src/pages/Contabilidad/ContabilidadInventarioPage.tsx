@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import API_BASE_URL_CORE from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface InventarioItem {
   id: string;
@@ -26,31 +27,49 @@ interface InventarioResponse {
 }
 
 const ContabilidadInventarioPage: React.FC = () => {
+  const { user } = useAuth();
+  const isGerencia = user?.role === 'gerencia';
   const [data, setData] = useState<InventarioResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchInventario = async () => {
+    let isMounted = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const fetchInventario = async (showLoading = true) => {
       try {
-        setLoading(true);
-        setError(null);
+        if (showLoading) {
+          setLoading(true);
+          setError(null);
+        }
         const token = localStorage.getItem('erp_token');
         const res = await fetch(`${API_BASE_URL_CORE}/contabilidad/inventario`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
         if (!res.ok) throw new Error('No se pudo cargar inventario');
         const json = await res.json();
+        if (!isMounted) return;
         setData(json);
       } catch (err: any) {
-        setError(err.message || 'Error al cargar inventario');
+        if (!isMounted) return;
+        if (showLoading) {
+          setError(err.message || 'Error al cargar inventario');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted && showLoading) setLoading(false);
       }
     };
 
-    fetchInventario();
-  }, []);
+    fetchInventario(true);
+    if (isGerencia) {
+      intervalId = setInterval(() => fetchInventario(false), 30000);
+    }
+    return () => {
+      isMounted = false;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isGerencia]);
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import jsPDF from 'jspdf';
 import API_BASE_URL_CORE from '../../config/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface TrabajadorPlanilla {
   id: string;
@@ -15,31 +16,49 @@ interface TrabajadorPlanilla {
 }
 
 const ContabilidadPlanillaPage: React.FC = () => {
+  const { user } = useAuth();
+  const isGerencia = user?.role === 'gerencia';
   const [trabajadores, setTrabajadores] = useState<TrabajadorPlanilla[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPlanilla = async () => {
+    let isMounted = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const fetchPlanilla = async (showLoading = true) => {
       try {
-        setLoading(true);
-        setError(null);
+        if (showLoading) {
+          setLoading(true);
+          setError(null);
+        }
         const token = localStorage.getItem('erp_token');
         const res = await fetch(`${API_BASE_URL_CORE}/contabilidad/planilla`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
         if (!res.ok) throw new Error('No se pudo cargar la planilla');
         const data = await res.json();
+        if (!isMounted) return;
         setTrabajadores(data || []);
       } catch (err: any) {
-        setError(err.message || 'Error al cargar planilla');
+        if (!isMounted) return;
+        if (showLoading) {
+          setError(err.message || 'Error al cargar planilla');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted && showLoading) setLoading(false);
       }
     };
 
-    fetchPlanilla();
-  }, []);
+    fetchPlanilla(true);
+    if (isGerencia) {
+      intervalId = setInterval(() => fetchPlanilla(false), 30000);
+    }
+    return () => {
+      isMounted = false;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isGerencia]);
 
   const totalActivos = useMemo(
     () => trabajadores.filter(t => Boolean(t.is_activo)).length,

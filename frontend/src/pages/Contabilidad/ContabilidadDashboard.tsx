@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import API_BASE_URL_CORE from '../../config/api';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 
@@ -85,6 +86,8 @@ const SimpleBarChart: React.FC<{ data: any[]; dataKey: string; color: string; ti
 };
 
 const ContabilidadDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const isGerencia = user?.role === 'gerencia';
   const [metricas, setMetricas] = useState<MetricasFinancieras>({
     ingresos: 0,
     egresos: 0,
@@ -100,13 +103,16 @@ const ContabilidadDashboard: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
     const token = localStorage.getItem('erp_token');
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-    const cargarDatos = async () => {
+    const cargarDatos = async (showLoading = true) => {
       try {
-        setLoading(true);
-        setError(null);
+        if (showLoading) {
+          setLoading(true);
+          setError(null);
+        }
         const res = await fetch(`${API_BASE_URL_CORE}/contabilidad/dashboard`, { headers });
         if (!res.ok) throw new Error(`Error ${res.status} en dashboard contabilidad`);
         const data: DashboardResponse = await res.json();
@@ -118,17 +124,23 @@ const ContabilidadDashboard: React.FC = () => {
         setRegistros(data.registrosRecientes || []);
       } catch (err: any) {
         if (!isMounted) return;
-        setError(err.message || 'Error al cargar datos');
+        if (showLoading) {
+          setError(err.message || 'Error al cargar datos');
+        }
       } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted && showLoading) setLoading(false);
       }
     };
 
-    cargarDatos();
+    cargarDatos(true);
+    if (isGerencia) {
+      intervalId = setInterval(() => cargarDatos(false), 30000);
+    }
     return () => {
       isMounted = false;
+      if (intervalId) clearInterval(intervalId);
     };
-  }, []);
+  }, [isGerencia]);
 
   const chartData = useMemo(() => {
     if (!ingresosMensuales) return [];

@@ -11,12 +11,12 @@ import {
 const router = express.Router();
 
 router.use(authenticateToken);
-router.use(authorizeRoles('contabilidad'));
+const lecturaRoles = ['contabilidad', 'gerencia'];
 
-router.get("/dashboard", getContabilidadDashboard);
-router.get("/planilla", getPlanilla);
-router.get("/inventario", getInventarioGeneral);
-router.get("/facturas", getFacturas);
-router.post("/facturas", createFactura);
+router.get("/dashboard", authorizeRoles(lecturaRoles), getContabilidadDashboard);
+router.get("/planilla", authorizeRoles(lecturaRoles), getPlanilla);
+router.get("/inventario", authorizeRoles(lecturaRoles), getInventarioGeneral);
+router.get("/facturas", authorizeRoles(lecturaRoles), getFacturas);
+router.post("/facturas", authorizeRoles('contabilidad'), createFactura);
 
 export default router;
