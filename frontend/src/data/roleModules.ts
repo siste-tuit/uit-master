@@ -56,7 +56,6 @@ export const roleModules = {
     { name: 'Mantenimiento - Órdenes', path: '/mantenimiento/ordenes', icon: '📋' },
     { name: 'Mantenimiento - Repuestos', path: '/mantenimiento/repuestos', icon: '🔩' },
     { name: 'Mantenimiento - Calendario', path: '/mantenimiento/calendario', icon: '📅' },
-    { name: 'Contabilidad - Dashboard', path: '/contabilidad/dashboard', icon: '💰' },
     { name: 'Producción', path: '/gerencia/production', icon: '🏭' },
     { name: 'Inventario', path: '/gerencia/inventory', icon: '📦' },
   ],
