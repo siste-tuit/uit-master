@@ -218,7 +218,7 @@ const ContabilidadDashboard: React.FC = () => {
       <div className="gradient-header">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold mb-3">Dashboard Contabilidad</h1>
+            <h1 className="text-4xl font-bold mb-3 text-white">Dashboard Contabilidad</h1>
             <p className="text-uit-green-100 text-lg">
               Gestión financiera y control de costos UIT
             </p>
