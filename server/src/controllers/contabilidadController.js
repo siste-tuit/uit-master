@@ -1,5 +1,5 @@
 import { pool } from "../config/db.js";
-import { randomUUID } from "crypto";
+import { randomUUID } from "crypto"; // Para generar IDs únicos
 
 const buildInventarioResumen = (items) => {
     const resumen = {
@@ -117,7 +117,7 @@ export const getPlanilla = async (req, res) => {
                 t.dni,
                 t.telefono,
                 t.cargo,
-                t.fecha_ingreso,
+                t.fech-ingreso,
                 t.is_activo,
                 u.nombre_completo as usuario,
                 u.departamento as departamento_usuario
@@ -189,28 +189,46 @@ export const getInventarioGeneral = async (req, res) => {
 
 export const getFacturas = async (req, res) => {
     try {
-        const { status } = req.query;
-        const params = [];
-        const where = [
-            "tipo = 'ingreso'",
-            "(referencia LIKE 'FACT-%' OR LOWER(categoria) LIKE 'factura%')"
-        ];
+        // Obtener todas las facturas
+        const [facturas] = await pool.query(`
+            SELECT
+                f.id,
+                f.referencia,
+                f.fecha_emision,
+                f.cliente_nombre,
+                f.cliente_direccion,
+                f.cliente_identificacion,
+                f.subtotal,
+                f.igv,
+                f.total,
+                f.status,
+                u.nombre_completo as user_name
+            FROM facturas f
+            LEFT JOIN usuarios u ON f.user_id = u.id
+            ORDER BY f.fecha_emision DESC, f.created_at DESC
+            LIMIT 200
+        `);
 
-        if (status) {
-            where.push("status = ?");
-            params.push(status);
-        }
-
-        const [rows] = await pool.query(
-            `SELECT id, referencia, categoria, monto, descripcion, fecha, status
-             FROM registros_financieros
-             WHERE ${where.join(" AND ")}
-             ORDER BY fecha DESC, created_at DESC
-             LIMIT 200`,
-            params
+        // Para cada factura, obtener sus ítems
+        const facturasConItems = await Promise.all(
+            facturas.map(async (factura) => {
+                const [items] = await pool.query(
+                    `SELECT
+                        id,
+                        item_descripcion,
+                        cantidad,
+                        precio_unitario,
+                        subtotal_item
+                    FROM factur-items
+                    WHERE factur-id = ?
+                    ORDER BY created_at ASC`,
+                    [factura.id]
+                );
+                return { ...factura, items };
+            })
         );
 
-        res.json(rows);
+        res.json(facturasConItems);
     } catch (error) {
         console.error("❌ Error al obtener facturas:", error);
         res.status(500).json({ message: "Error al obtener facturas" });
@@ -219,32 +237,68 @@ export const getFacturas = async (req, res) => {
 
 export const createFactura = async (req, res) => {
     try {
-        const { referencia, categoria, monto, descripcion, fecha } = req.body;
-        const montoNumber = parseFloat(monto);
+        const {
+            referencia,
+            fecha_emision,
+            cliente_nombre,
+            cliente_direccion,
+            cliente_identificacion,
+            subtotal,
+            igv,
+            total,
+            status, // Opcional, por si se envía un status inicial
+            items // Array de ítems
+        } = req.body;
 
-        if (!Number.isFinite(montoNumber) || montoNumber <= 0) {
-            return res.status(400).json({ message: "Monto inválido" });
+        // Validaciones básicas
+        if (!referencia || !fecha_emision || !cliente_nombre || !items || items.length === 0) {
+            return res.status(400).json({ message: "Faltan campos obligatorios para la factura." });
         }
 
-        const id = randomUUID();
-        const referenciaFinal = referencia && referencia.trim().length > 0
-            ? referencia.trim()
-            : `FACT-${Date.now()}`;
-        const categoriaFinal = categoria && categoria.trim().length > 0
-            ? categoria.trim()
-            : "Factura";
-        const fechaFinal = fecha && fecha.trim().length > 0
-            ? fecha
-            : new Date().toISOString().slice(0, 10);
+        // Asegurarse de que los montos sean números válidos
+        const parsedSubtotal = parseFloat(subtotal);
+        const parsedIgv = parseFloat(igv);
+        const parsedTotal = parseFloat(total);
 
-        await pool.query(
-            `INSERT INTO registros_financieros
-             (id, tipo, categoria, monto, descripcion, fecha, usuario_id, status, referencia)
-             VALUES (?, 'ingreso', ?, ?, ?, ?, ?, 'pendiente', ?)`,
-            [id, categoriaFinal, montoNumber, descripcion || null, fechaFinal, req.user.id, referenciaFinal]
-        );
+        if (isNaN(parsedSubtotal) || isNaN(parsedIgv) || isNaN(parsedTotal) || parsedSubtotal < 0 || parsedIgv < 0 || parsedTotal < 0) {
+            return res.status(400).json({ message: "Montos de factura inválidos." });
+        }
 
-        res.status(201).json({ id, referencia: referenciaFinal });
+        const facturaId = randomUUID();
+        const userId = req.user.id; // Asumiendo que req.user.id está disponible desde authenticateToken
+        
+        let connection;
+        try {
+            connection = await pool.getConnection();
+            await connection.beginTransaction();
+
+            // Insertar en la tabla 'facturas'
+            await connection.query(
+                `INSERT INTO facturas
+                 (id, referencia, fecha_emision, cliente_nombre, cliente_direccion, cliente_identificacion, subtotal, igv, total, status, user_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [facturaId, referencia, fecha_emision, cliente_nombre, cliente_direccion || null, cliente_identificacion || null, parsedSubtotal, parsedIgv, parsedTotal, status || 'pendiente', userId]
+            );
+
+            // Insertar los ítems en la tabla 'factur-items'
+            for (const item of items) {
+                await connection.query(
+                    `INSERT INTO factur-items
+                     (id, factur-id, item_descripcion, cantidad, precio_unitario, subtotal_item)
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [randomUUID(), facturaId, item.item_descripcion, parseFloat(item.cantidad), parseFloat(item.precio_unitario), parseFloat(item.subtotal_item)]
+                );
+            }
+
+            await connection.commit();
+            res.status(201).json({ id: facturaId, referencia });
+        } catch (dbError) {
+            if (connection) await connection.rollback();
+            console.error("❌ Error en transacción al crear factura:", dbError);
+            res.status(500).json({ message: "Error en base de datos al crear factura." });
+        } finally {
+            if (connection) connection.release();
+        }
     } catch (error) {
         console.error("❌ Error al crear factura:", error);
         res.status(500).json({ message: "Error al crear factura" });

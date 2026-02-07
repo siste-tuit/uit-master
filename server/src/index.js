@@ -10,6 +10,7 @@ import roleRoutes from "./routes/roles.js";
 import departamentRoutes from "./routes/departament.js";
 import configRoutes from "./routes/config.js";
 import logRoutes from "./routes/log.js";
+import configuracionFacturasRoutes from "./routes/configuracionFacturas.js"; // NUEVO
 import equiposRoutes from "./routes/equipos.js";
 import ordenesRoutes from "./routes/ordenes.js";
 import repuestosRoutes from "./routes/repuestos.js";
@@ -51,6 +52,8 @@ app.use("/api/roles", roleRoutes);
 app.use("/api/departamentos", departamentRoutes);
 // 🏷️ Rutas de Gestión de Roles
 app.use("/api/configuracion", configRoutes);
+// ⚙️ Rutas de Configuración de Facturas
+app.use("/api/configuracion/facturas", configuracionFacturasRoutes); // NUEVO
 // 🏷️ Rutas de Gestión de Roles
 app.use("/api/logs", logRoutes);
 // 🏷️ Rutas de Gestión de Roles
@@ -83,5 +86,3 @@ app.use("/api/asistencia", asistenciaRoutes);
 // 🚀 Iniciar servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-
