@@ -117,7 +117,7 @@ export const getPlanilla = async (req, res) => {
                 t.dni,
                 t.telefono,
                 t.cargo,
-                t.fech-ingreso,
+                t.fecha_ingreso,
                 t.is_activo,
                 u.nombre_completo as usuario,
                 u.departamento as departamento_usuario
@@ -219,8 +219,8 @@ export const getFacturas = async (req, res) => {
                         cantidad,
                         precio_unitario,
                         subtotal_item
-                    FROM factur-items
-                    WHERE factur-id = ?
+                    FROM factura_items
+                    WHERE factura_id = ?
                     ORDER BY created_at ASC`,
                     [factura.id]
                 );
@@ -280,11 +280,11 @@ export const createFactura = async (req, res) => {
                 [facturaId, referencia, fecha_emision, cliente_nombre, cliente_direccion || null, cliente_identificacion || null, parsedSubtotal, parsedIgv, parsedTotal, status || 'pendiente', userId]
             );
 
-            // Insertar los ítems en la tabla 'factur-items'
+            // Insertar los ítems en la tabla 'factura_items'
             for (const item of items) {
                 await connection.query(
-                    `INSERT INTO factur-items
-                     (id, factur-id, item_descripcion, cantidad, precio_unitario, subtotal_item)
+                    `INSERT INTO factura_items
+                     (id, factura_id, item_descripcion, cantidad, precio_unitario, subtotal_item)
                      VALUES (?, ?, ?, ?, ?, ?)`,
                     [randomUUID(), facturaId, item.item_descripcion, parseFloat(item.cantidad), parseFloat(item.precio_unitario), parseFloat(item.subtotal_item)]
                 );
@@ -302,5 +302,97 @@ export const createFactura = async (req, res) => {
     } catch (error) {
         console.error("❌ Error al crear factura:", error);
         res.status(500).json({ message: "Error al crear factura" });
+    }
+};
+
+export const getFacturaById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [facturas] = await pool.query(
+            `SELECT f.id, f.referencia, f.fecha_emision, f.cliente_nombre, f.cliente_direccion,
+                    f.cliente_identificacion, f.subtotal, f.igv, f.total, f.status, u.nombre_completo as user_name
+             FROM facturas f
+             LEFT JOIN usuarios u ON f.user_id = u.id
+             WHERE f.id = ?`,
+            [id]
+        );
+        if (facturas.length === 0) {
+            return res.status(404).json({ message: "Factura no encontrada" });
+        }
+        const [items] = await pool.query(
+            `SELECT id, item_descripcion, cantidad, precio_unitario, subtotal_item
+             FROM factura_items WHERE factura_id = ? ORDER BY created_at ASC`,
+            [id]
+        );
+        res.json({ ...facturas[0], items });
+    } catch (error) {
+        console.error("❌ Error al obtener factura:", error);
+        res.status(500).json({ message: "Error al obtener factura" });
+    }
+};
+
+export const updateFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { referencia, fecha_emision, cliente_nombre, cliente_direccion, cliente_identificacion, subtotal, igv, total, status, items } = req.body;
+
+        const [existing] = await pool.query("SELECT id FROM facturas WHERE id = ?", [id]);
+        if (existing.length === 0) {
+            return res.status(404).json({ message: "Factura no encontrada" });
+        }
+
+        const parsedSubtotal = parseFloat(subtotal);
+        const parsedIgv = parseFloat(igv);
+        const parsedTotal = parseFloat(total);
+        if (isNaN(parsedSubtotal) || isNaN(parsedIgv) || isNaN(parsedTotal) || parsedSubtotal < 0 || parsedIgv < 0 || parsedTotal < 0) {
+            return res.status(400).json({ message: "Montos de factura inválidos." });
+        }
+
+        let connection;
+        try {
+            connection = await pool.getConnection();
+            await connection.beginTransaction();
+            await connection.query(
+                `UPDATE facturas SET referencia=?, fecha_emision=?, cliente_nombre=?, cliente_direccion=?,
+                 cliente_identificacion=?, subtotal=?, igv=?, total=?, status=?
+                 WHERE id = ?`,
+                [referencia || null, fecha_emision || null, cliente_nombre || null, cliente_direccion || null,
+                    cliente_identificacion || null, parsedSubtotal, parsedIgv, parsedTotal, status || 'pendiente', id]
+            );
+            await connection.query("DELETE FROM factura_items WHERE factura_id = ?", [id]);
+            if (items && items.length > 0) {
+                for (const item of items) {
+                    await connection.query(
+                        `INSERT INTO factura_items (id, factura_id, item_descripcion, cantidad, precio_unitario, subtotal_item)
+                         VALUES (?, ?, ?, ?, ?, ?)`,
+                        [randomUUID(), id, item.item_descripcion, parseFloat(item.cantidad), parseFloat(item.precio_unitario), parseFloat(item.subtotal_item)]
+                    );
+                }
+            }
+            await connection.commit();
+            res.json({ message: "Factura actualizada correctamente", id });
+        } catch (dbError) {
+            if (connection) await connection.rollback();
+            throw dbError;
+        } finally {
+            if (connection) connection.release();
+        }
+    } catch (error) {
+        console.error("❌ Error al actualizar factura:", error);
+        res.status(500).json({ message: "Error al actualizar factura" });
+    }
+};
+
+export const deleteFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [result] = await pool.query("DELETE FROM facturas WHERE id = ?", [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Factura no encontrada" });
+        }
+        res.json({ message: "Factura eliminada correctamente" });
+    } catch (error) {
+        console.error("❌ Error al eliminar factura:", error);
+        res.status(500).json({ message: "Error al eliminar factura" });
     }
 };

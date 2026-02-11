@@ -451,6 +451,47 @@ async function runContabilidadMigrations(connection) {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE RESTRICT,
             FOREIGN KEY (aprobado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS configuracion_facturas (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            nombre_empresa VARCHAR(255) NOT NULL,
+            direccion_empresa TEXT NULL,
+            ruc_empresa VARCHAR(20) NULL,
+            logo_url VARCHAR(500) NULL,
+            info_pago TEXT NULL,
+            notas_pie TEXT NULL,
+            igv_porcentaje DECIMAL(5, 4) NOT NULL DEFAULT 0.18,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS facturas (
+            id CHAR(36) PRIMARY KEY,
+            referencia VARCHAR(100) NOT NULL,
+            fecha_emision DATE NOT NULL,
+            cliente_nombre VARCHAR(255) NOT NULL,
+            cliente_direccion TEXT NULL,
+            cliente_identificacion VARCHAR(50) NULL,
+            subtotal DECIMAL(15, 2) NOT NULL DEFAULT 0,
+            igv DECIMAL(15, 2) NOT NULL DEFAULT 0,
+            total DECIMAL(15, 2) NOT NULL DEFAULT 0,
+            status VARCHAR(50) DEFAULT 'pendiente',
+            user_id CHAR(36) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES usuarios(id) ON DELETE RESTRICT,
+            INDEX idx_factura_fecha (fecha_emision),
+            INDEX idx_factura_status (status)
+        )`,
+        `CREATE TABLE IF NOT EXISTS factura_items (
+            id CHAR(36) PRIMARY KEY,
+            factura_id CHAR(36) NOT NULL,
+            item_descripcion VARCHAR(500) NOT NULL,
+            cantidad DECIMAL(10, 3) NOT NULL DEFAULT 1,
+            precio_unitario DECIMAL(15, 2) NOT NULL DEFAULT 0,
+            subtotal_item DECIMAL(15, 2) NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (factura_id) REFERENCES facturas(id) ON DELETE CASCADE,
+            INDEX idx_factura_items_factura (factura_id)
         )`
     ];
 
