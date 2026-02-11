@@ -270,13 +270,22 @@ const ContabilidadFacturasPage: React.FC = () => {
                       onChange={(e) => updateItem(idx, 'item_descripcion', e.target.value)}
                     />
                     <input
-                      type="number"
-                      min={0.001}
-                      step={0.01}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       className="border rounded px-2 py-1.5 text-sm w-20"
                       placeholder="Cant"
-                      value={it.cantidad || ''}
-                      onChange={(e) => updateItem(idx, 'cantidad', parseFloat(e.target.value) || 0)}
+                      value={it.cantidad === 0 ? '' : it.cantidad}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const val = raw === '' ? 0 : parseInt(raw, 10);
+                        updateItem(idx, 'cantidad', val < 1 ? (raw === '' ? 0 : 1) : val);
+                      }}
+                      onBlur={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const val = raw === '' ? 0 : parseInt(raw, 10);
+                        if (val < 1) updateItem(idx, 'cantidad', 1);
+                      }}
                     />
                     <input
                       type="number"
