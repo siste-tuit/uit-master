@@ -107,13 +107,23 @@ export const loginUser = async (req, res) => {
         // Excluir el campo 'password' antes de enviarlo
         const { password: _, ...userData } = user;
 
+        // Normalizar el rol a minúsculas para consistencia con el frontend
+        const normalizedRole = user.role ? user.role.toString().trim().toLowerCase() : null;
+        userData.role = normalizedRole;
+
         // 7. Asegurar que el dashboard_path sea correcto (fallback si está desactualizado)
         let dashboardPath = user.dashboard_path;
         
         // Si el rol es gerencia y el path apunta al dashboard eliminado, usar production
-        if (user.role === 'gerencia' && dashboardPath === '/gerencia/dashboard') {
+        if (normalizedRole === 'gerencia' && dashboardPath === '/gerencia/dashboard') {
             dashboardPath = '/gerencia/production';
             console.log(`⚠️ Dashboard path corregido para gerencia: ${dashboardPath}`);
+        }
+        
+        // Si el rol es 'produccion', mapear a 'usuarios' para el frontend
+        if (normalizedRole === 'produccion') {
+            userData.role = 'usuarios';
+            console.log(`⚠️ Rol 'produccion' mapeado a 'usuarios' para el frontend`);
         }
 
         // El frontend recibirá el token y los datos del usuario (sin password)

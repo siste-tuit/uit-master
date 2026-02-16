@@ -15,7 +15,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
 
   // Obtener módulos según el rol del usuario
-  const userModules = user ? roleModules[user.role] : [];
+  // Normalizar el rol a minúsculas y manejar casos especiales
+  const normalizedRole = user?.role?.toLowerCase().trim();
+  
+  // Mapeo de roles alternativos a roles válidos
+  const roleMapping: Record<string, keyof typeof roleModules> = {
+    'produccion': 'usuarios', // El rol 'produccion' mapea a 'usuarios'
+    'usuario': 'usuarios', // El rol 'usuario' singular mapea a 'usuarios' plural
+  };
+  
+  const mappedRole = roleMapping[normalizedRole || ''] || normalizedRole;
+  const userModules = user && mappedRole ? (roleModules[mappedRole as keyof typeof roleModules] || []) : [];
 
   // Función auxiliar para verificar si una ruta está activa (incluye subrutas)
   const isRouteActive = (path: string) => {

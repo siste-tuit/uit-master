@@ -59,6 +59,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         // Parseamos el usuario. Se asume que el token es válido hasta que falle una petición.
         const parsedUser: User = JSON.parse(savedUser);
+        
+        // Normalizar el rol a minúsculas para consistencia
+        if (parsedUser.role) {
+          const normalizedRole = parsedUser.role.toString().trim().toLowerCase();
+          
+          // Mapeo de roles alternativos a roles válidos
+          const roleMapping: Record<string, string> = {
+            'produccion': 'usuarios',
+            'usuario': 'usuarios', // Mapear 'usuario' singular a 'usuarios' plural
+          };
+          
+          parsedUser.role = (roleMapping[normalizedRole] || normalizedRole) as UserRole;
+        }
+        
         setUser(parsedUser);
       } catch (error) {
         console.error('Error al cargar la sesión guardada:', error);
@@ -94,14 +108,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // 1. Extraer los datos y el token de la respuesta del backend
         const { token, user: userData, dashboardPath } = data;
 
-        // 2. Adaptar la fecha lastLogin
+        // 2. Adaptar la fecha lastLogin y normalizar el rol
         // La fecha viene como string del backend, la convertimos a Date si es necesario
+        // Normalizar el rol a minúsculas y mapear roles alternativos
+        let normalizedRole = userData.role ? userData.role.toString().trim().toLowerCase() : 'usuarios';
+        const roleMapping: Record<string, string> = {
+          'produccion': 'usuarios',
+          'usuario': 'usuarios',
+        };
+        normalizedRole = roleMapping[normalizedRole] || normalizedRole;
+        
         const userToSave: User = {
           ...userData,
           lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : new Date(),
           createdAt: new Date(userData.createdAt),
-          // Asegúrate que el campo 'role' se mapee correctamente
-          role: userData.role as UserRole,
+          // Asegúrate que el campo 'role' se mapee correctamente y esté normalizado
+          role: normalizedRole as UserRole,
         };
 
         // 3. Guardar la sesión y el token
