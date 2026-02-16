@@ -34,10 +34,10 @@ const AsistenciaPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (fechaSeleccionada) {
+    if (fechaSeleccionada && trabajadores.length > 0) {
       fetchRegistrosAsistencia();
     }
-  }, [fechaSeleccionada]);
+  }, [fechaSeleccionada, trabajadores.length]);
 
   const fetchTrabajadores = async () => {
     try {
@@ -92,8 +92,8 @@ const AsistenciaPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         const registrosMap: Record<string, RegistroAsistencia> = {};
-        
-        // Inicializar todos los trabajadores
+
+        // Inicializar todos los trabajadores primero (no perder ninguno)
         trabajadores.forEach(t => {
           registrosMap[t.id] = {
             trabajador_id: t.id,
@@ -106,7 +106,7 @@ const AsistenciaPage: React.FC = () => {
           };
         });
 
-        // Llenar con datos existentes
+        // Sobrescribir con datos existentes del API
         (data.registros || []).forEach((reg: any) => {
           registrosMap[reg.trabajador_id] = {
             id: reg.id,
@@ -121,7 +121,7 @@ const AsistenciaPage: React.FC = () => {
           };
         });
 
-        setRegistros(registrosMap);
+        setRegistros(prev => ({ ...prev, ...registrosMap }));
       }
     } catch (error) {
       console.error('Error al cargar registros:', error);
@@ -142,8 +142,15 @@ const AsistenciaPage: React.FC = () => {
   const handleSave = async (trabajadorId: string) => {
     if (isReadOnly) return;
     try {
+      // Usar siempre el id del trabajador del parámetro; el registro en state puede no existir por race condition
       const registro = registros[trabajadorId];
-      if (!registro) return;
+      const idTrabajador = (registro?.trabajador_id || trabajadorId).trim();
+      const fechaValida = (fechaSeleccionada || '').trim();
+
+      if (!idTrabajador || !fechaValida) {
+        alert('El trabajador y la fecha son obligatorios.');
+        return;
+      }
 
       const token = localStorage.getItem('erp_token');
       const response = await fetch(`${API_BASE_URL_CORE}/asistencia`, {
@@ -153,13 +160,13 @@ const AsistenciaPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          trabajadorId: registro.trabajador_id,
-          fecha: fechaSeleccionada,
-          hora_entrada: registro.hora_entrada || null,
-          hora_refrigerio_salida: registro.hora_refrigerio_salida || null,
-          hora_refrigerio_llegada: registro.hora_refrigerio_llegada || null,
-          hora_salida: registro.hora_salida || null,
-          observaciones: registro.observaciones || null
+          trabajadorId: idTrabajador,
+          fecha: fechaValida,
+          hora_entrada: registro?.hora_entrada || null,
+          hora_refrigerio_salida: registro?.hora_refrigerio_salida || null,
+          hora_refrigerio_llegada: registro?.hora_refrigerio_llegada || null,
+          hora_salida: registro?.hora_salida || null,
+          observaciones: registro?.observaciones || null
         }),
       });
 

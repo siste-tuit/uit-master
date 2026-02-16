@@ -133,7 +133,15 @@ export const getRegistrosAsistenciaGlobal = async (req, res) => {
 export const createOrUpdateRegistroAsistencia = async (req, res) => {
     try {
         const { id } = req.user;
-        const { trabajadorId, fecha, hora_entrada, hora_refrigerio_salida, hora_refrigerio_llegada, hora_salida, observaciones } = req.body;
+        const body = req.body || {};
+        // Aceptar trabajadorId o trabajador_id por compatibilidad con el frontend
+        const trabajadorId = (body.trabajadorId || body.trabajador_id || '').toString().trim();
+        const fecha = (body.fecha || '').toString().trim();
+        const hora_entrada = body.hora_entrada ?? null;
+        const hora_refrigerio_salida = body.hora_refrigerio_salida ?? null;
+        const hora_refrigerio_llegada = body.hora_refrigerio_llegada ?? null;
+        const hora_salida = body.hora_salida ?? null;
+        const observaciones = body.observaciones ?? null;
 
         // Validar campos requeridos
         if (!trabajadorId || !fecha) {
