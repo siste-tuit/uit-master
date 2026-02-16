@@ -55,7 +55,13 @@ export const authenticateToken = async (req, res, next) => {
         const userRole = users[0].role || null;
         
         // Normalizar el rol (trim y lower case para comparaciones consistentes)
-        const userRoleNormalizado = userRole ? userRole.toString().trim().toLowerCase() : null;
+        let userRoleNormalizado = userRole ? userRole.toString().trim().toLowerCase() : null;
+        
+        // Mapear roles alternativos al nombre usado en rutas (evita 403 por "usuario" vs "usuarios")
+        const roleMapping = { 'usuario': 'usuarios', 'produccion': 'usuarios' };
+        if (userRoleNormalizado && roleMapping[userRoleNormalizado]) {
+            userRoleNormalizado = roleMapping[userRoleNormalizado];
+        }
         
         req.user = {
             id: users[0].id,
