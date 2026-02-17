@@ -16,35 +16,31 @@ const Layout: React.FC = () => {
 
   return (
     <NotificationProvider userId={user?.id}>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-x-hidden w-full">
-        {/* Sidebar (fija en desktop, deslizable en mobile) */}
+      <div className="min-h-screen min-h-[100dvh] bg-gradient-to-br from-gray-50 to-gray-100 overflow-x-hidden w-full max-w-[100vw] flex flex-col lg:flex-row">
+        {/* Sidebar: en móvil fixed/overlay; en desktop (lg+) primer hijo flex */}
         <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
-        {/* Contenido principal */}
+        {/* Contenido principal: flex-1 + min-w-0 para que se adapte y no desborde */}
         <div
-          className={`
-            transition-all duration-300 min-h-screen w-full overflow-x-hidden overflow-y-auto
-            ${sidebarOpen ? 'ml-0' : 'ml-0'}
-            lg:ml-72  /* <- deja espacio fijo para el sidebar en desktop */
-          `}
+          className="flex-1 min-w-0 flex flex-col min-h-screen min-h-[100dvh] transition-all duration-300 overflow-x-hidden overflow-y-auto"
           style={{ overflowX: 'hidden', overflowY: 'auto', position: 'relative' }}
         >
           {/* Navbar */}
-          <div style={{ position: 'relative', zIndex: 100, width: '100%', overflow: 'visible' }}>
+          <div className="relative z-[100] w-full max-w-full shrink-0" style={{ overflow: 'visible' }}>
             <Navbar onToggleSidebar={toggleSidebar} />
           </div>
 
           {/* Contenido */}
           <main
-            className={`overflow-x-hidden w-full ${
+            className={`flex-1 overflow-x-hidden w-full max-w-full min-w-0 ${
               isGerencia ? 'p-2 sm:p-3 lg:p-2 xl:p-3 text-[13px]' : 'p-4 sm:p-5 lg:p-4 xl:p-6'
             }`}
           >
             <div
-              className={`w-full ${
+              className={`w-full max-w-full min-w-0 ${
                 isGerencia
-                  ? 'max-w-[980px] xl:max-w-[1080px] 2xl:max-w-[1160px] mx-0'
-                  : 'max-w-full lg:max-w-[calc(100vw-300px)] xl:max-w-[calc(100vw-320px)] 2xl:max-w-[1400px]'
+                  ? 'max-w-[980px] xl:max-w-[1080px] 2xl:max-w-[1160px] mx-auto'
+                  : 'mx-auto 2xl:max-w-[1400px]'
               }`}
             >
               <Outlet />

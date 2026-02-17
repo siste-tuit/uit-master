@@ -6,22 +6,31 @@
   * {
     @apply border-gray-200;
   }
-  
-  body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased;
-    overflow-x: hidden;
-    max-width: 100vw;
-  }
-  
+
   html {
     @apply scroll-smooth;
     overflow-x: hidden;
     max-width: 100vw;
+    width: 100%;
+    -webkit-text-size-adjust: 100%;
   }
-  
+
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    position: relative;
+  }
+
   #root {
     overflow-x: hidden;
     max-width: 100vw;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
@@ -126,6 +135,16 @@
 @layer utilities {
   .glass-effect {
     @apply bg-white/80 backdrop-blur-sm border border-white/20;
+  }
+
+  /* Contenedor responsive para tablas: evita desborde horizontal */
+  .table-responsive {
+    @apply w-full max-w-full overflow-x-auto overflow-y-visible;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-responsive table {
+    @apply min-w-[600px];
   }
 }
 

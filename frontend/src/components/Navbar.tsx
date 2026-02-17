@@ -113,9 +113,9 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center px-4 lg:px-6 sticky top-0 z-50 w-full" style={{ overflow: 'visible', position: 'sticky', top: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '100%', gap: '0.5rem', boxSizing: 'border-box', alignContent: 'center' }}>
-      {/* Lado izquierdo - Título y bienvenida */}
-      <div className="flex items-center space-x-4 flex-shrink-0 min-w-0" style={{ flexShrink: 1, flexGrow: 1, maxWidth: 'calc(100% - 150px)', minWidth: '200px' }}>
+    <header className="bg-white shadow-sm border-b border-gray-200 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 lg:px-6 sticky top-0 z-50 w-full max-w-full min-w-0 shrink-0">
+      {/* Lado izquierdo - Título y bienvenida (puede encogerse) */}
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 overflow-hidden">
         {/* Botón de menú para móviles */}
         <button
           onClick={onToggleSidebar}
@@ -128,10 +128,10 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
         </button>
 
         {/* Título de la página actual */}
-        <div className="flex items-center space-x-3">
-          <div className="w-1 h-8 bg-gradient-to-b from-primary-500 to-secondary-500 rounded-full hidden sm:block"></div>
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
+          <div className="w-1 h-6 sm:h-8 bg-gradient-to-b from-primary-500 to-secondary-500 rounded-full hidden sm:block shrink-0" />
+          <div className="min-w-0 overflow-hidden">
+            <h1 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">
               {getPageTitle()}
             </h1>
             <p className="text-xs sm:text-sm text-gray-500 font-medium truncate">
@@ -141,67 +141,25 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
         </div>
       </div>
 
-      {/* Lado derecho - Perfil - PRIORIDAD MÁXIMA - SIEMPRE VISIBLE */}
-      <div className="flex items-center justify-end space-x-2 sm:space-x-3 flex-shrink-0 overflow-visible relative" style={{ minWidth: '120px', flexShrink: 0, flexGrow: 0, width: 'auto', position: 'relative', zIndex: 10000, display: 'flex', maxWidth: 'none' }}>
+      {/* Lado derecho - Perfil (siempre visible, no se encoge) */}
+      <div className="flex items-center justify-end shrink-0 min-w-[80px] sm:min-w-[120px]">
 
-        {/* Perfil del usuario - SIEMPRE VISIBLE - FORZADO A SER VISIBLE */}
+        {/* Perfil del usuario */}
         {user ? (
-          <div 
-            className="relative overflow-visible" 
-            ref={profileRef}
-            style={{ 
-              position: 'relative', 
-              zIndex: 10001,
-              display: 'flex',
-              visibility: 'visible',
-              opacity: 1,
-              flexShrink: 0,
-              flexGrow: 0,
-              minWidth: '50px',
-              width: 'auto',
-              height: 'auto',
-              marginLeft: 'auto',
-              pointerEvents: 'auto',
-              alignItems: 'center'
-            }}
-          >
+          <div className="relative flex items-center" ref={profileRef}>
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Toggle del estado del dropdown
                 setIsProfileOpen(prev => !prev);
               }}
-              onMouseDown={(e) => {
-                // Prevenir propagación para evitar conflictos
-                e.stopPropagation();
-              }}
-              className="flex items-center space-x-2 sm:space-x-3 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              onMouseDown={(e) => e.stopPropagation()}
+              className="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 shrink-0"
               aria-label="Menú de perfil"
               aria-expanded={isProfileOpen}
               type="button"
-              style={{ 
-                position: 'relative', 
-                zIndex: 99998,
-                display: 'flex',
-                visibility: 'visible',
-                opacity: 1,
-                flexShrink: 0,
-                backgroundColor: 'transparent',
-                border: 'none',
-                cursor: 'pointer'
-              }}
             >
-              <div 
-                className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0"
-                style={{
-                  minWidth: '40px',
-                  minHeight: '40px',
-                  width: '40px',
-                  height: '40px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-                }}
-              >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow shrink-0">
                 {user.avatar ? (
                   <span className="text-white text-lg">{user.avatar}</span>
                 ) : (
@@ -210,32 +168,27 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
                   </span>
                 )}
               </div>
-              <div className="hidden xl:block text-left min-w-0 flex-shrink-0">
-                <p className="text-sm font-semibold text-gray-900 truncate max-w-[100px]">{user.name || 'Usuario'}</p>
+              <div className="hidden xl:block text-left min-w-0 max-w-[120px]">
+                <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'Usuario'}</p>
                 <p className="text-xs text-gray-500 capitalize truncate">{user.role || ''}</p>
               </div>
-              <svg 
-                className={`w-4 h-4 text-gray-500 group-hover:text-gray-700 transition-transform flex-shrink-0 hidden xl:block ${isProfileOpen ? 'transform rotate-180' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className={`w-4 h-4 text-gray-500 shrink-0 hidden xl:block ${isProfileOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
-            {/* Dropdown del perfil - Usar fixed en desktop para evitar problemas de overflow */}
+            {/* Dropdown del perfil */}
             {isProfileOpen && (
               <>
-                <div 
+                <div
                   data-dropdown="profile"
-                  className="absolute lg:fixed right-0 top-full lg:top-16 mt-2 lg:mt-0 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-[99999]"
+                  className="absolute right-0 top-full mt-2 w-56 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-[99999]"
                   onClick={(e) => e.stopPropagation()}
-                  style={{ 
-                    zIndex: 99999,
-                    display: isProfileOpen ? 'block' : 'none',
-                    position: 'absolute'
-                  }}
                 >
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="text-sm font-semibold text-gray-900">{user.name || 'Usuario'}</p>

@@ -43,13 +43,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar: móvil = fixed + overlay; desktop (lg+) = estático como hijo flex */}
       <div
         className={`
-          !fixed flex flex-col top-0 left-0 h-screen bg-white shadow-xl z-50 transform transition-all duration-300 ease-in-out
+          fixed flex flex-col top-0 left-0 h-screen bg-white shadow-xl z-50 transform transition-all duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:static lg:shadow-lg lg:z-auto
-          w-72 border-r border-gray-200 flex-shrink-0 overflow-y-auto overscroll-contain
+          lg:translate-x-0 lg:relative lg:shadow-lg lg:z-auto lg:h-screen
+          w-72 min-w-[18rem] max-w-[85vw] lg:max-w-none border-r border-gray-200 flex-shrink-0 overflow-y-auto overscroll-contain
         `}
       >
         {/* Header del Sidebar */}
