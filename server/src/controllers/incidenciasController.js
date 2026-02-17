@@ -96,6 +96,83 @@ export const createIncidencia = async (req, res) => {
     }
 };
 
+// ✅ Crear incidencia de soporte desde Producción hacia Mantenimiento
+// Usa el usuario autenticado como "reportado_por" y asigna el departamento de Mantenimiento si existe.
+export const createIncidenciaSoporte = async (req, res) => {
+    try {
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({
+                success: false,
+                message: "Usuario no autenticado",
+            });
+        }
+
+        const id = uuidv4();
+        const {
+            titulo,
+            descripcion,
+            tipo_solicitud,
+            maquina,
+            insumo,
+            prioridad = "media",
+        } = req.body;
+
+        // Buscar departamento de Mantenimiento (si existe)
+        let departamento_id = null;
+        try {
+            const [deps] = await pool.query(
+                `SELECT id 
+                 FROM departamentos 
+                 WHERE LOWER(nombre) LIKE 'mantenimiento%' 
+                 LIMIT 1`
+            );
+            if (deps.length > 0) {
+                departamento_id = deps[0].id;
+            }
+        } catch (e) {
+            console.warn("⚠️ No se pudo obtener departamento de Mantenimiento:", e.message);
+        }
+
+        // Construir descripción detallada incluyendo información de máquina e insumos
+        const descripcionDetallada = [
+            `Tipo de solicitud: ${tipo_solicitud || "no especificado"}`,
+            `Máquina / equipo: ${maquina || "no especificado"}`,
+            insumo ? `Insumo solicitado: ${insumo}` : null,
+            "",
+            descripcion || "",
+        ]
+            .filter(Boolean)
+            .join("\n");
+
+        await pool.query(
+            `
+      INSERT INTO incidencias (
+        id, titulo, descripcion, prioridad, estado,
+        reportado_por, asignado_a, departamento_id, fecha_reporte
+      )
+      VALUES (?, ?, ?, ?, 'pendiente', ?, NULL, ?, NOW())
+      `,
+            [
+                id,
+                titulo || "Solicitud de soporte de producción",
+                descripcionDetallada,
+                prioridad,
+                req.user.id,
+                departamento_id,
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "✅ Ticket de soporte creado correctamente",
+            id,
+        });
+    } catch (error) {
+        console.error("❌ Error al crear ticket de soporte:", error);
+        res.status(500).json({ success: false, message: "Error al crear ticket de soporte" });
+    }
+};
+
 // ✅ Actualizar una incidencia
 export const updateIncidencia = async (req, res) => {
     try {

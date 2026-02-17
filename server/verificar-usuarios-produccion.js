@@ -1,20 +1,16 @@
-// Script para verificar el estado de los 13 usuarios de producción
+// Script para verificar el estado de los usuarios de producción
 import { pool } from "./src/config/db.js";
 
 const usuariosProduccion = [
-    { nombre: 'Ana García', email: 'AyC@textil.com' },
-    { nombre: 'Carlos Mendoza', email: 'AyC2@textil.com' },
-    { nombre: 'Carmen Torres', email: 'AyC3@textil.com' },
-    { nombre: 'Carmen Vega', email: 'AyC4@textil.com' },
-    { nombre: 'Fernando Díaz', email: 'DyM@textil.com' },
-    { nombre: 'Juan Pérez', email: 'Elenatex@textil.com' },
-    { nombre: 'Luis Sánchez', email: 'Emanuel@textil.com' },
-    { nombre: 'María López', email: 'Emanuel2@textil.com' },
-    { nombre: 'Miguel Herrera', email: 'JflStyle@textil.com' },
-    { nombre: 'Patricia López', email: 'Juanazea@textil.com' },
-    { nombre: 'Pedro Martínez', email: 'Myl@textil.com' },
-    { nombre: 'Roberto Torres', email: 'Myl2@textil.com' },
-    { nombre: 'Sandra Morales', email: 'Velasquez@textil.com' }
+    { nombre: 'Hover Rojas', email: 'hover.rojas@textil.com' },
+    { nombre: 'Maycol', email: 'maycol@textil.com' },
+    { nombre: 'Alicia', email: 'alicia@textil.com' },
+    { nombre: 'Elena', email: 'elena@textil.com' },
+    { nombre: 'Rosa', email: 'rosa@textil.com' },
+    { nombre: 'Alfredo', email: 'alfredo@textil.com' },
+    { nombre: 'Eduardo', email: 'eduardo@textil.com' },
+    { nombre: 'Juana', email: 'juana@textil.com' },
+    { nombre: 'Alisson', email: 'alisson@textil.com' }
 ];
 
 async function verificarUsuariosProduccion() {

@@ -211,9 +211,9 @@ node src/seeders/crear-usuarios-produccion.js
 #### 6.2 Verificar Usuarios Creados
 
 Deberías tener:
-- ✅ 6 usuarios administrativos (admin, gerencia, ingenieria, sistemas, etc.)
-- ✅ 13 usuarios de producción (AyC@textil.com, DyM@textil.com, etc.)
-- ✅ Todos con contraseña: `demo123` (¡CAMBIAR EN PRODUCCIÓN!)
+- ✅ 6 usuarios administrativos (admin, contabilidad, gerencia, ingenieria, sistemas, mantenimiento)
+- ✅ 9 usuarios de producción (Hover Rojas, Maycol, Alicia, Elena, Rosa, Alfredo, Eduardo, Juana, Alisson)
+- ✅ Usuarios de producción con contraseña por defecto: `demo123` (¡CAMBIAR EN PRODUCCIÓN!)
 
 ---
 

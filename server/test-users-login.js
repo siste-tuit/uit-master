@@ -9,19 +9,15 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'mi_secreto_super_seguro_y_largo';
 
 const emailsToCheck = [
-  'AyC@textil.com',
-  'AyC2@textil.com',
-  'AyC3@textil.com',
-  'AyC4@textil.com',
-  'DyM@textil.com',
-  'Elenatex@textil.com',
-  'Emanuel@textil.com',
-  'Emanuel2@textil.com',
-  'JflStyle@textil.com',
-  'Juanazea@textil.com',
-  'Myl@textil.com',
-  'Myl2@textil.com',
-  'Velasquez@textil.com'
+  'hover.rojas@textil.com',
+  'maycol@textil.com',
+  'alicia@textil.com',
+  'elena@textil.com',
+  'rosa@textil.com',
+  'alfredo@textil.com',
+  'eduardo@textil.com',
+  'juana@textil.com',
+  'alisson@textil.com'
 ];
 
 // Contraseñas comunes a probar (según documentación, la contraseña es demo123)

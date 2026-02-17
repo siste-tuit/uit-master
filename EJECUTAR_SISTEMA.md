@@ -16,12 +16,13 @@
 Abre una terminal PowerShell en la carpeta `server` y ejecuta:
 
 ```powershell
-cd D:\UIT-master\server
+cd "D:\Empresa UIT\UIT-master\server"
 
-# Configurar variables de entorno (ajusta según tu configuración)
+# O usa las variables definidas en tu .env.local en la raíz del proyecto
+# (recomendado, ver README.md). Si quieres configurarlas manualmente:
 $env:DB_HOST='localhost'
 $env:DB_USER='root'
-$env:DB_PASS='Muni2025...'
+$env:DB_PASS='tu-contraseña-mysql'
 $env:DB_NAME='uit'
 $env:PORT='5000'
 $env:JWT_SECRET='uit_master_secret_123'
@@ -42,9 +43,9 @@ Server running on http://localhost:5000
 Abre OTRA terminal PowerShell en la carpeta `frontend` y ejecuta:
 
 ```powershell
-cd D:\UIT-master\frontend
+cd "D:\Empresa UIT\UIT-master\frontend"
 
-# Ejecutar frontend
+# Ejecutar frontend (Vite está configurado en el puerto 3000)
 npm run dev
 ```
 

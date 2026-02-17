@@ -2,7 +2,7 @@
 
 ## 📋 Usuarios Disponibles
 
-Todos los usuarios tienen la contraseña: **demo123**
+- **Contraseña por defecto (si no se indica otra):** `demo123`
 
 ### 👨‍💼 Administrador
 - **Email**: admin@textil.com
@@ -10,6 +10,7 @@ Todos los usuarios tienen la contraseña: **demo123**
 - **Rol**: administrador
 - **Departamento**: Administración
 - **Acceso**: Completo al sistema
+- **Contraseña**: `Adm226....`
 
 ### 💼 Contabilidad
 - **Email**: contabilidad@textil.com
@@ -17,6 +18,7 @@ Todos los usuarios tienen la contraseña: **demo123**
 - **Rol**: contabilidad
 - **Departamento**: Contabilidad
 - **Acceso**: Gestión financiera y facturación
+- **Contraseña**: `Ctd620...`
 
 ### 📊 Gerencia
 - **Email**: gerencia@textil.com
@@ -24,6 +26,7 @@ Todos los usuarios tienen la contraseña: **demo123**
 - **Rol**: gerencia
 - **Departamento**: Gerencia
 - **Acceso**: Dashboards estratégicos y métricas
+- **Contraseña**: `geR202...`
 
 ### 💻 Sistemas
 - **Email**: sistemas@textil.com
@@ -31,6 +34,7 @@ Todos los usuarios tienen la contraseña: **demo123**
 - **Rol**: sistemas
 - **Departamento**: Sistemas
 - **Acceso**: Gestión de incidencias y configuración
+- **Contraseña**: `siS2026...`
 
 ### ⚙️ Ingeniería
 - **Email**: ingenieria@textil.com
@@ -38,6 +42,7 @@ Todos los usuarios tienen la contraseña: **demo123**
 - **Rol**: ingenieria
 - **Departamento**: Ingeniería
 - **Acceso**: Gestión de proyectos
+- **Contraseña**: `inG226...`
 
 ### 🔧 Mantenimiento
 - **Email**: mantenimiento@textil.com
@@ -45,23 +50,20 @@ Todos los usuarios tienen la contraseña: **demo123**
 - **Rol**: mantenimiento
 - **Departamento**: Mantenimiento
 - **Acceso**: Gestión de equipos y órdenes
+- **Contraseña**: `MAT266...`
 
-### 👷 Usuarios de Producción (13 usuarios)
-Todos tienen la contraseña: **demo123**
+### 👷 Usuarios de Producción (9 usuarios)
+Todos tienen la contraseña por defecto: **demo123** (salvo que se cambie manualmente).
 
-1. **Ana García** - AyC@textil.com (Línea: A&C - CHINCHA GREEN)
-2. **Carlos Mendoza** - AyC2@textil.com (Línea: A&C 2 - CHINCHA GREEN)
-3. **Carmen Torres** - AyC3@textil.com (Línea: A&C 3 - CHINCHA GREEN)
-4. **Carmen Vega** - AyC4@textil.com (Línea: A&C 4 - CHINCHA GREEN)
-5. **Fernando Díaz** - DyM@textil.com (Línea: D&M - CHINCHA GREEN)
-6. **Juan Pérez** - Elenatex@textil.com (Línea: ELENA TEX - CHINCHA GREEN)
-7. **Luis Sánchez** - Emanuel@textil.com (Línea: EMANUEL - CHINCHA GREEN)
-8. **María López** - Emanuel2@textil.com (Línea: EMANUEL 2 - CHINCHA GREEN)
-9. **Miguel Herrera** - JflStyle@textil.com (Línea: JFL STYLE - CHINCHA GREEN)
-10. **Patricia López** - Juanazea@textil.com (Línea: JUANA ZEA - CHINCHA GREEN)
-11. **Pedro Martínez** - Myl@textil.com (Línea: M&L - CHINCHA GREEN)
-12. **Roberto Torres** - Myl2@textil.com (Línea: M&L 2 - CHINCHA GREEN)
-13. **Sandra Morales** - Velasquez@textil.com (Línea: VELASQUEZ - CHINCHA GREEN)
+1. **Hover Rojas** - hover.rojas@textil.com
+2. **Maycol** - maycol@textil.com
+3. **Alicia** - alicia@textil.com
+4. **Elena** - elena@textil.com
+5. **Rosa** - rosa@textil.com
+6. **Alfredo** - alfredo@textil.com
+7. **Eduardo** - eduardo@textil.com
+8. **Juana** - juana@textil.com
+9. **Alisson** - alisson@textil.com
 
 - **Rol**: usuarios
 - **Departamento**: Producción
@@ -80,7 +82,7 @@ Si necesitas agregar más usuarios, puedes:
 
 2. **Desde la terminal** (creando tu propio seeder):
    ```powershell
-   cd D:\UIT-master\server
+   cd "D:\Empresa UIT\UIT-master\server"
    node src/seeders/seedMultipleUsers.js
    ```
 

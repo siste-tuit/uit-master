@@ -30,6 +30,7 @@ export const roleModules = {
     { name: 'Órdenes de Trabajo', path: '/mantenimiento/ordenes', icon: '📋' },
     { name: 'Repuestos', path: '/mantenimiento/repuestos', icon: '🔩' },
     { name: 'Calendario', path: '/mantenimiento/calendario', icon: '📅' },
+    { name: 'Tickets de Soporte', path: '/mantenimiento/soporte', icon: '🛟' },
   ],
   gerencia: [
     { name: 'Admin - Dashboard', path: '/administracion/dashboard', icon: '👔' },
@@ -75,5 +76,6 @@ export const roleModules = {
     { name: 'Trabajadores', path: '/produccion/trabajadores', icon: '👥' },
     { name: 'Asistencia', path: '/produccion/asistencia', icon: '⏰' },
     { name: 'Perfil', path: '/produccion/profile', icon: '👤' },
+    { name: 'Soporte', path: '/produccion/soporte', icon: '🛟' },
   ],
 };

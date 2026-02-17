@@ -1,23 +1,19 @@
-// Script para verificar que los 13 usuarios de producción estén en la base de datos
+// Script para verificar que los usuarios de producción estén en la base de datos
 import { pool } from './src/config/db.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const correosEsperados = [
-    'AyC@textil.com',
-    'AyC2@textil.com',
-    'AyC3@textil.com',
-    'AyC4@textil.com',
-    'DyM@textil.com',
-    'Elenatex@textil.com',
-    'Emanuel@textil.com',
-    'Emanuel2@textil.com',
-    'JflStyle@textil.com',
-    'Juanazea@textil.com',
-    'Myl@textil.com',
-    'Myl2@textil.com',
-    'Velasquez@textil.com'
+    'hover.rojas@textil.com',
+    'maycol@textil.com',
+    'alicia@textil.com',
+    'elena@textil.com',
+    'rosa@textil.com',
+    'alfredo@textil.com',
+    'eduardo@textil.com',
+    'juana@textil.com',
+    'alisson@textil.com'
 ];
 
 async function verificarUsuariosProduccion() {
@@ -58,8 +54,8 @@ async function verificarUsuariosProduccion() {
         const encontrados = correosEsperados.filter(c => correosEncontrados.includes(c));
 
         console.log('📋 Verificación de correos esperados:');
-        console.log(`✅ Encontrados: ${encontrados.length}/13`);
-        console.log(`❌ Faltantes: ${faltantes.length}/13\n`);
+        console.log(`✅ Encontrados: ${encontrados.length}/${correosEsperados.length}`);
+        console.log(`❌ Faltantes: ${faltantes.length}/${correosEsperados.length}\n`);
 
         if (encontrados.length > 0) {
             console.log('✅ Usuarios encontrados:');
@@ -114,13 +110,13 @@ async function verificarUsuariosProduccion() {
         }
 
         console.log('\n📊 Resumen final:');
-        console.log(`   Total usuarios esperados: 13`);
+        console.log(`   Total usuarios esperados: ${correosEsperados.length}`);
         console.log(`   Usuarios encontrados: ${encontrados.length}`);
         console.log(`   Usuarios activos: ${usuariosActivos.length}`);
         console.log(`   Usuarios con línea asignada: ${usuariosConLinea.length}`);
         
-        if (faltantes.length === 0 && usuariosActivos.length === 13 && usuariosConLinea.length === 13) {
-            console.log('\n✅ ¡PERFECTO! Todos los usuarios están creados, activos y asignados a líneas.');
+        if (faltantes.length === 0 && usuariosActivos.length === correosEsperados.length && usuariosConLinea.length === correosEsperados.length) {
+            console.log('\n✅ ¡PERFECTO! Todos los usuarios de producción están creados, activos y asignados a líneas.');
         } else {
             console.log('\n⚠️ Hay problemas que deben resolverse antes de que el sistema funcione correctamente.');
         }

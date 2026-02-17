@@ -29,6 +29,7 @@ import UsuarioMiProduccionPage from './pages/Produccion/UsuarioMiProduccionPage'
 import TrabajadoresPage from './pages/Produccion/TrabajadoresPage';
 import AsistenciaPage from './pages/Produccion/AsistenciaPage';;
 import UsuarioPerfilPage from './pages/Produccion/UsuarioPerfilPage';
+import SoportePage from './pages/Produccion/SoportePage';
 import IngenieriaDashboard from './pages/Ingenieria/IngenieriaDashboard';
 import IngenieriaProduccionPage from './pages/Ingenieria/IngenieriaProduccionPage';
 import IngenieriaHistorialPage from './pages/Ingenieria/IngenieriaHistorialPage';
@@ -37,6 +38,7 @@ import IngenieriaInventarioPage from './pages/Ingenieria/IngenieriaInventarioPag
 import IngenieriaReportesUsuariosPage from './pages/Ingenieria/IngenieriaReportesUsuariosPage';
 import IngenieriaFichaEntregaPage from './pages/Ingenieria/IngenieriaFichaEntregaPage';
 import IngenieriaFichaSalidaPage from './pages/Ingenieria/IngenieriaFichaSalidaPage';
+import SoporteTicketsPage from './pages/Mantenimiento/SoporteTicketsPage';
 
 // PROVIDERS
 import { UsuariosProvider } from './context/UsuariosContext';
@@ -201,6 +203,14 @@ function App() {
                                   </ProtectedRoute>
                                 }
                               />
+                              <Route
+                                path="mantenimiento/soporte"
+                                element={
+                                  <ProtectedRoute allowedRoles={['mantenimiento', 'gerencia']}>
+                                    <SoporteTicketsPage />
+                                  </ProtectedRoute>
+                                }
+                              />
 
                               <Route
                                 path="contabilidad/dashboard"
@@ -362,6 +372,14 @@ function App() {
                                 element={
                                   <ProtectedRoute allowedRoles={['usuarios']}>
                                     <AsistenciaPage />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path="produccion/soporte"
+                                element={
+                                  <ProtectedRoute allowedRoles={['usuarios']}>
+                                    <SoportePage />
                                   </ProtectedRoute>
                                 }
                               />

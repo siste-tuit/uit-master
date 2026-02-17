@@ -5,19 +5,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const usuariosAVerificar = [
-    'AyC@textil.com',
-    'AyC2@textil.com',
-    'AyC3@textil.com',
-    'AyC4@textil.com',
-    'DyM@textil.com',
-    'Elenatex@textil.com',
-    'Emanuel@textil.com',
-    'Emanuel2@textil.com',
-    'JflStyle@textil.com',
-    'Juanazea@textil.com',
-    'Myl@textil.com',
-    'Myl2@textil.com',
-    'Velasquez@textil.com'
+    'hover.rojas@textil.com',
+    'maycol@textil.com',
+    'alicia@textil.com',
+    'elena@textil.com',
+    'rosa@textil.com',
+    'alfredo@textil.com',
+    'eduardo@textil.com',
+    'juana@textil.com',
+    'alisson@textil.com'
 ];
 
 // Roles válidos en el sistema

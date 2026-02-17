@@ -124,8 +124,17 @@ async function runUsersSeeder(connection) {
     const { v4: uuidv4 } = await import('uuid');
     
     const SALT_ROUNDS = 10;
-    const PASSWORD_PLAINTEXT = 'demo123';
-    const hashedPassword = await bcrypt.default.hash(PASSWORD_PLAINTEXT, SALT_ROUNDS);
+    const PASSWORD_PLAINTEXT_DEFAULT = 'demo123';
+    const PASSWORDS = {
+        'admin@textil.com': 'Adm226....',
+        'contabilidad@textil.com': 'Ctd620...',
+        'sistemas@textil.com': 'siS2026...',
+        'gerencia@textil.com': 'geR202...',
+        'ingenieria@textil.com': 'inG226...',
+        'mantenimiento@textil.com': 'MAT266...'
+        // usuario@textil.com y usuarios de producción
+        // mantienen la contraseña por defecto configurada (demo123) a nivel de seeding
+    };
 
     const USUARIOS = [
         { nombre_completo: 'Carlos Mendoza', email: 'admin@textil.com', rol: 'administrador', departamento: 'Administración', avatar: '👔' },
@@ -138,6 +147,9 @@ async function runUsersSeeder(connection) {
     ];
 
     for (const usuario of USUARIOS) {
+        const plainPassword = PASSWORDS[usuario.email] || PASSWORD_PLAINTEXT_DEFAULT;
+        const hashedPassword = await bcrypt.default.hash(plainPassword, SALT_ROUNDS);
+
         // Obtener el ID del rol
         const [roles] = await connection.query(
             "SELECT id FROM roles WHERE nombre = ?",

@@ -850,20 +850,25 @@ export const getUsuariosProduccion = async (req, res) => {
             lineas_asignadas: usuario.lineas_asignadas || null
         }));
 
-        // Verificar que estén los 13 usuarios esperados
+        // Verificación opcional de usuarios de producción esperados (9 principales)
         const correosEsperados = [
-            'AyC@textil.com', 'AyC2@textil.com', 'AyC3@textil.com', 'AyC4@textil.com',
-            'DyM@textil.com', 'Elenatex@textil.com', 'Emanuel@textil.com', 'Emanuel2@textil.com',
-            'JflStyle@textil.com', 'Juanazea@textil.com', 'Myl@textil.com', 'Myl2@textil.com',
-            'Velasquez@textil.com'
+            'hover.rojas@textil.com',
+            'maycol@textil.com',
+            'alicia@textil.com',
+            'elena@textil.com',
+            'rosa@textil.com',
+            'alfredo@textil.com',
+            'eduardo@textil.com',
+            'juana@textil.com',
+            'alisson@textil.com'
         ];
         const correosEncontrados = usuariosTransformados.map(u => u.email);
         const faltantes = correosEsperados.filter(c => !correosEncontrados.includes(c));
         
         if (faltantes.length > 0) {
-            console.warn(`⚠️ [getUsuariosProduccion] Faltan ${faltantes.length} usuarios:`, faltantes);
+            console.warn(`⚠️ [getUsuariosProduccion] Faltan ${faltantes.length} usuarios de producción esperados:`, faltantes);
         } else {
-            console.log('✅ [getUsuariosProduccion] Todos los 13 usuarios están presentes');
+            console.log(`✅ [getUsuariosProduccion] Todos los ${correosEsperados.length} usuarios de producción principales están presentes`);
         }
 
         res.json({ 

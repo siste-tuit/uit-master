@@ -1,4 +1,4 @@
-// Script para crear 13 usuarios de producción
+// Script para crear 9 usuarios de producción
 import bcrypt from 'bcrypt';
 import { pool } from "./src/config/db.js";
 import { randomUUID } from 'crypto';
@@ -6,21 +6,17 @@ import { randomUUID } from 'crypto';
 const SALT_ROUNDS = 10;
 const PASSWORD_PLAINTEXT = 'demo123';
 
-// Lista de 13 usuarios de producción (correos corresponden a sus líneas de producción)
+// Lista de 9 usuarios de producción
 const usuariosProduccion = [
-    { nombre: 'Ana García', email: 'AyC@textil.com' }, // A&C - CHINCHA GREEN
-    { nombre: 'Carlos Mendoza', email: 'AyC2@textil.com' }, // A&C 2 - CHINCHA GREEN
-    { nombre: 'Carmen Torres', email: 'AyC3@textil.com' }, // A&C 3 - CHINCHA GREEN
-    { nombre: 'Carmen Vega', email: 'AyC4@textil.com' }, // A&C 4 - CHINCHA GREEN
-    { nombre: 'Fernando Díaz', email: 'DyM@textil.com' }, // D&M - CHINCHA GREEN
-    { nombre: 'Juan Pérez', email: 'Elenatex@textil.com' }, // ELENA TEX - CHINCHA GREEN
-    { nombre: 'Luis Sánchez', email: 'Emanuel@textil.com' }, // EMANUEL - CHINCHA GREEN
-    { nombre: 'María López', email: 'Emanuel2@textil.com' }, // EMANUEL 2 - CHINCHA GREEN
-    { nombre: 'Miguel Herrera', email: 'JflStyle@textil.com' }, // JFL STYLE - CHINCHA GREEN
-    { nombre: 'Patricia López', email: 'Juanazea@textil.com' }, // JUANA ZEA - CHINCHA GREEN
-    { nombre: 'Pedro Martínez', email: 'Myl@textil.com' }, // M&L - CHINCHA GREEN
-    { nombre: 'Roberto Torres', email: 'Myl2@textil.com' }, // M&L 2 - CHINCHA GREEN
-    { nombre: 'Sandra Morales', email: 'Velasquez@textil.com' } // VELASQUEZ - CHINCHA GREEN
+    { nombre: 'Hover Rojas', email: 'hover.rojas@textil.com' },
+    { nombre: 'Maycol', email: 'maycol@textil.com' },
+    { nombre: 'Alicia', email: 'alicia@textil.com' },
+    { nombre: 'Elena', email: 'elena@textil.com' },
+    { nombre: 'Rosa', email: 'rosa@textil.com' },
+    { nombre: 'Alfredo', email: 'alfredo@textil.com' },
+    { nombre: 'Eduardo', email: 'eduardo@textil.com' },
+    { nombre: 'Juana', email: 'juana@textil.com' },
+    { nombre: 'Alisson', email: 'alisson@textil.com' }
 ];
 
 async function crearUsuariosProduccion() {

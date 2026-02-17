@@ -1,5 +1,18 @@
 version: '3.8'
 
+# ⚠️ IMPORTANTE
+# Este archivo describe un stack LEGACY basado en:
+# - backend/ (Express + Prisma)
+# - PostgreSQL
+#
+# El backend REAL del sistema UIT-MASTER usa:
+# - server/ (Express + MySQL)
+# - Configuración documentada en README.md
+#
+# Usa este docker-compose solo si quieres experimentar con el backend
+# alternativo en backend/. Para el sistema principal, sigue las
+# instrucciones de ejecución del README y de los scripts .ps1/.md.
+
 services:
   # Base de datos PostgreSQL
   postgres:

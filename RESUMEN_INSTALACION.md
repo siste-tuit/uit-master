@@ -4,7 +4,7 @@
 
 ### ✅ Base de Datos MySQL
 - **Base de datos creada**: `uit` en MySQL Workbench
-- **Contraseña configurada**: `Muni2025...` en `server/.env`
+- **Contraseña configurada**: (definida en `DB_PASS` dentro de tu `.env.local` o `server/.env`, nunca en el repositorio)
 - **13 tablas creadas** exitosamente
 
 ### ✅ Datos Iniciales
@@ -39,13 +39,13 @@
 
 ### 1. Iniciar Backend
 ```powershell
-cd D:\UIT-master\server
+cd "D:\Empresa UIT\UIT-master\server"
 npm run dev
 ```
 
 ### 2. Iniciar Frontend (en otra terminal)
 ```powershell
-cd D:\UIT-master\frontend
+cd "D:\Empresa UIT\UIT-master\frontend"
 npm run dev     # ⚠️ IMPORTANTE: NO usar "npm start", usar "npm run dev"
 ```
 
@@ -120,7 +120,7 @@ npm run dev  # Puerto 3000
 ## 📁 Estructura del Proyecto
 
 ```
-D:\UIT-master\
+D:\Empresa UIT\UIT-master\
 ├── server\                    # Backend MySQL
 │   ├── .env                  # Configuración MySQL
 │   ├── src\

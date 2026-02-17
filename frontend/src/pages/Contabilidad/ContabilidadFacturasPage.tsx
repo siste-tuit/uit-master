@@ -5,12 +5,13 @@ import { useAuth } from '../../context/AuthContext';
 
 // Helper para cargar imagen (logo)
 const loadImage = (src: string): Promise<HTMLImageElement | null> => {
+  const fullSrc = src.startsWith('http') ? src : `${window.location.origin}${src.startsWith('/') ? src : '/' + src}`;
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
-    img.src = src;
+    img.src = fullSrc;
   });
 };
 
@@ -176,19 +177,22 @@ const ContabilidadFacturasPage: React.FC = () => {
     setForm(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
   };
 
+  const [pdfGenerando, setPdfGenerando] = useState(false);
   const handleExportarFacturaPDF = async (factura: Factura) => {
-    let configEmpresa: { nombre_empresa?: string; direccion_empresa?: string; ruc_empresa?: string; logo_url?: string } | null = null;
+    setPdfGenerando(true);
     try {
-      const token = localStorage.getItem('erp_token');
-      const res = await fetch(`${API_BASE_URL_CORE}/configuracion/facturas`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      if (res.ok) configEmpresa = await res.json();
-    } catch {
-      configEmpresa = null;
-    }
+      let configEmpresa: { nombre_empresa?: string; direccion_empresa?: string; ruc_empresa?: string; logo_url?: string } | null = null;
+      try {
+        const token = localStorage.getItem('erp_token');
+        const res = await fetch(`${API_BASE_URL_CORE}/configuracion/facturas`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (res.ok) configEmpresa = await res.json();
+      } catch {
+        configEmpresa = null;
+      }
 
-    const nombreEmpresa = configEmpresa?.nombre_empresa || 'Unión Innova Textil';
+      const nombreEmpresa = configEmpresa?.nombre_empresa || 'Unión Innova Textil';
     const direccionEmpresa = configEmpresa?.direccion_empresa || '';
     const rucEmpresa = configEmpresa?.ruc_empresa || '';
     const pdf = new jsPDF();
@@ -327,8 +331,14 @@ const ContabilidadFacturasPage: React.FC = () => {
     pdf.text(`Documento generado el ${new Date().toLocaleString('es-PE')}`, margin, 288);
     pdf.text('UIT Textil - Sistema de Gestión', pageWidth - margin, 288, { align: 'right' });
 
-    const fileName = `Factura_${factura.referencia || factura.id.substring(0, 8)}.pdf`;
-    pdf.save(fileName);
+      const fileName = `Factura_${factura.referencia || factura.id.substring(0, 8)}.pdf`;
+      pdf.save(fileName);
+    } catch (err: any) {
+      console.error('Error al generar PDF:', err);
+      setError('Error al generar el PDF. Intenta de nuevo.');
+    } finally {
+      setPdfGenerando(false);
+    }
   };
 
   return (
@@ -470,10 +480,12 @@ const ContabilidadFacturasPage: React.FC = () => {
                     <td className="py-2 pr-4">{factura.status}</td>
                     <td className="py-2 text-right">
                       <button
+                        type="button"
                         onClick={() => handleExportarFacturaPDF(factura)}
-                        className="text-xs px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        disabled={pdfGenerando}
+                        className="text-xs px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        PDF
+                        {pdfGenerando ? '...' : 'PDF'}
                       </button>
                     </td>
                   </tr>
