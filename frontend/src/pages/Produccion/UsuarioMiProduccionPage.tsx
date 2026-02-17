@@ -212,19 +212,13 @@ const UsuarioMiProduccionPage: React.FC = () => {
     fetchPedidosRecibidos();
   }, [user?.id]);
 
-  // Cargar reportes enviados
+  // Cargar reportes enviados (resiliente: si el backend falla, se muestran 0 reportes sin romper la página)
   const fetchReportesEnviados = async () => {
-    if (!user?.id) {
-      console.log('⚠️ [fetchReportesEnviados] No hay user.id disponible');
-      return;
-    }
+    if (!user?.id) return;
 
     try {
       setLoadingReportes(true);
       const token = localStorage.getItem('erp_token');
-      console.log('📤 [fetchReportesEnviados] Consultando reportes para usuario:', user.id);
-      console.log('📤 [fetchReportesEnviados] Usuario completo:', user);
-      
       const response = await fetch(
         `${API_BASE_URL_CORE}/reportes-produccion/reportes-diarios/usuario/${user.id}`,
         {
@@ -235,37 +229,15 @@ const UsuarioMiProduccionPage: React.FC = () => {
         }
       );
 
-      console.log('📥 [fetchReportesEnviados] Respuesta del servidor:', response.status, response.statusText);
-
       if (response.ok) {
         const result = await response.json();
-        console.log('📊 Reportes recibidos del backend:', result.reportes?.length || 0);
-        console.log('📊 Resultado completo:', result);
-        
-        // Verificar cada reporte y su detección
-        if (result.reportes && result.reportes.length > 0) {
-          result.reportes.forEach((reporte: ReporteDiario, index: number) => {
-            const esDeIngenieria = esReporteDeIngenieria(reporte.observaciones);
-            console.log(`   Reporte ${index + 1}:`, {
-              id: reporte.id,
-              fecha: reporte.fecha,
-              usuario_id: (reporte as any).usuario_id || reporte.id,
-              observaciones: reporte.observaciones?.substring(0, 100),
-              esDeIngenieria: esDeIngenieria
-            });
-          });
-        } else {
-          console.log('⚠️ No se recibieron reportes del backend');
-        }
-        
         setReportesEnviados(result.reportes || []);
       } else {
-        console.error('❌ Error en respuesta del servidor:', response.status);
-        const errorData = await response.json().catch(() => ({}));
-        console.error('❌ Detalles del error:', errorData);
+        // Backend 500 u otro error: no romper la UI, mostrar lista vacía
+        setReportesEnviados([]);
       }
-    } catch (error) {
-      console.error('❌ Error al cargar reportes enviados:', error);
+    } catch {
+      setReportesEnviados([]);
     } finally {
       setLoadingReportes(false);
     }

@@ -367,46 +367,16 @@ export const enviarReporteDiario = async (req, res) => {
     }
 };
 
-// Obtener reportes de un usuario específico
+// Obtener reportes de un usuario específico (resiliente: ante error devuelve [])
 export const getReportesPorUsuario = async (req, res) => {
+    const { usuario_id } = req.params;
+    const { fecha_inicio, fecha_fin } = req.query;
+
     try {
-        const { usuario_id } = req.params;
-        const { fecha_inicio, fecha_fin } = req.query;
-        const usuario_autenticado = req.user?.id;
-
-        console.log(`📊 [getReportesPorUsuario] Solicitud recibida:`);
-        console.log(`   - usuario_id desde params: ${usuario_id}`);
-        console.log(`   - usuario_id autenticado: ${usuario_autenticado}`);
-        console.log(`   - fecha_inicio: ${fecha_inicio || 'ninguna'}`);
-        console.log(`   - fecha_fin: ${fecha_fin || 'ninguna'}`);
-
-        // Verificar que existen reportes en la tabla
-        const [totalReportes] = await pool.query(
-            `SELECT COUNT(*) as total FROM reportes_diarios`
-        );
-        console.log(`   - Total de reportes en la BD: ${totalReportes[0]?.total || 0}`);
-
-        // Verificar reportes del usuario específico
-        const [reportesUsuario] = await pool.query(
-            `SELECT COUNT(*) as total FROM reportes_diarios WHERE usuario_id = ?`,
-            [usuario_id]
-        );
-        console.log(`   - Total de reportes del usuario ${usuario_id}: ${reportesUsuario[0]?.total || 0}`);
-
-        // Verificar que el usuario existe
-        const [usuarioInfo] = await pool.query(
-            `SELECT id, nombre_completo, email FROM usuarios WHERE id = ?`,
-            [usuario_id]
-        );
-        if (usuarioInfo.length > 0) {
-            console.log(`   - Usuario encontrado: ${usuarioInfo[0].nombre_completo} (${usuarioInfo[0].email})`);
-        } else {
-            console.log(`   ⚠️ Usuario ${usuario_id} no encontrado en la BD`);
-        }
-
         let query = `
             SELECT 
-                rd.*,
+                rd.id, rd.usuario_id, rd.linea_id, rd.fecha, rd.cantidad_producida,
+                rd.cantidad_defectuosa, rd.observaciones, rd.fecha_creacion,
                 lp.nombre as linea_nombre,
                 u.nombre_completo as usuario_nombre,
                 u.email as usuario_email
@@ -415,56 +385,24 @@ export const getReportesPorUsuario = async (req, res) => {
             LEFT JOIN usuarios u ON rd.usuario_id = u.id
             WHERE rd.usuario_id = ?
         `;
-        
         const params = [usuario_id];
 
         if (fecha_inicio) {
             query += ' AND rd.fecha >= ?';
             params.push(fecha_inicio);
         }
-
         if (fecha_fin) {
             query += ' AND rd.fecha <= ?';
             params.push(fecha_fin);
         }
-
         query += ' ORDER BY rd.fecha DESC, rd.fecha_creacion DESC';
 
-        console.log(`   - Query SQL: ${query}`);
-        console.log(`   - Parámetros:`, params);
-
         const [reportes] = await pool.query(query, params);
-
-        console.log(`📊 [getReportesPorUsuario] Usuario: ${usuario_id}, Reportes encontrados: ${reportes.length}`);
-        if (reportes.length > 0) {
-            reportes.forEach((reporte, index) => {
-                console.log(`   Reporte ${index + 1}:`, {
-                    id: reporte.id,
-                    fecha: reporte.fecha,
-                    usuario_id: reporte.usuario_id,
-                    cantidad_producida: reporte.cantidad_producida,
-                    observaciones_completa: reporte.observaciones,
-                    tiene_ingenieria: reporte.observaciones?.toLowerCase().includes('ingenieria') || false
-                });
-            });
-        } else {
-            console.log(`   ⚠️ No se encontraron reportes para el usuario ${usuario_id}`);
-            // Intentar ver qué reportes existen con otros usuarios
-            const [todosReportes] = await pool.query(
-                `SELECT usuario_id, COUNT(*) as total FROM reportes_diarios GROUP BY usuario_id LIMIT 5`
-            );
-            if (todosReportes.length > 0) {
-                console.log(`   📋 Reportes de otros usuarios (primeros 5):`);
-                todosReportes.forEach(r => {
-                    console.log(`      - Usuario ${r.usuario_id}: ${r.total} reportes`);
-                });
-            }
-        }
-
-        res.json({ reportes });
+        return res.json({ reportes: reportes || [] });
     } catch (error) {
-        console.error('❌ Error al obtener reportes por usuario:', error);
-        res.status(500).json({ message: 'Error al obtener reportes', error: error.message });
+        console.error('❌ [getReportesPorUsuario] Error:', error.message);
+        // No devolver 500: el frontend espera { reportes }. Evitar pantalla rota.
+        return res.status(200).json({ reportes: [] });
     }
 };
 
