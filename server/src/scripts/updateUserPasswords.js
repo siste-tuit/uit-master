@@ -11,9 +11,19 @@ const PASSWORDS = {
   'sistemas@textil.com': 'siS2026...',
   'gerencia@textil.com': 'geR202...',
   'ingenieria@textil.com': 'inG226...',
-  'mantenimiento@textil.com': 'MAT266...'
-  // usuario@textil.com y usuarios de producción
-  // mantienen la contraseña actual (por defecto demo123) salvo que se definan aquí.
+  'mantenimiento@textil.com': 'MAT266...',
+
+  // Usuarios de producción (todos con la misma contraseña fuerte por ahora)
+  'hover.rojas@textil.com': 'Hov226...',
+  'maycol@textil.com': 'Myc226...',
+  'alicia@textil.com': 'Alc226...',
+  'elena@textil.com': 'Ele226...',
+  'rosa@textil.com': 'Ros226...',
+  'alfredo@textil.com': 'Alf226...',
+  'eduardo@textil.com': 'Edu226...',
+  'juana@textil.com': 'Jun226...',
+  'alisson@textil.com': 'Als226...',
+  // usuario@textil.com mantiene la contraseña actual (por defecto demo123) salvo que se defina aquí.
 };
 
 const SALT_ROUNDS = 10;

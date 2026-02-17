@@ -53,17 +53,17 @@
 - **Contraseña**: `MAT266...`
 
 ### 👷 Usuarios de Producción (9 usuarios)
-Todos tienen la contraseña por defecto: **demo123** (salvo que se cambie manualmente).
+Cada usuario de producción tiene ahora una contraseña distinta:
 
-1. **Hover Rojas** - hover.rojas@textil.com
-2. **Maycol** - maycol@textil.com
-3. **Alicia** - alicia@textil.com
-4. **Elena** - elena@textil.com
-5. **Rosa** - rosa@textil.com
-6. **Alfredo** - alfredo@textil.com
-7. **Eduardo** - eduardo@textil.com
-8. **Juana** - juana@textil.com
-9. **Alisson** - alisson@textil.com
+1. **Hover Rojas** - hover.rojas@textil.com - Contraseña: `Hov226...`
+2. **Maycol** - maycol@textil.com - Contraseña: `Myc226...`
+3. **Alicia** - alicia@textil.com - Contraseña: `Alc226...`
+4. **Elena** - elena@textil.com - Contraseña: `Ele226...`
+5. **Rosa** - rosa@textil.com - Contraseña: `Ros226...`
+6. **Alfredo** - alfredo@textil.com - Contraseña: `Alf226...`
+7. **Eduardo** - eduardo@textil.com - Contraseña: `Edu226...`
+8. **Juana** - juana@textil.com - Contraseña: `Jun226...`
+9. **Alisson** - alisson@textil.com - Contraseña: `Als226...`
 
 - **Rol**: usuarios
 - **Departamento**: Producción

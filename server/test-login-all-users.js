@@ -13,16 +13,16 @@ const USERS = [
   { email: "ingenieria@textil.com", password: "inG226...", rolEsperado: "ingenieria" },
   { email: "mantenimiento@textil.com", password: "MAT266...", rolEsperado: "mantenimiento" },
 
-  // Usuarios de producción (rol usuarios)
-  { email: "hover.rojas@textil.com", password: "demo123", rolEsperado: "usuarios" },
-  { email: "maycol@textil.com", password: "demo123", rolEsperado: "usuarios" },
-  { email: "alicia@textil.com", password: "demo123", rolEsperado: "usuarios" },
-  { email: "elena@textil.com", password: "demo123", rolEsperado: "usuarios" },
-  { email: "rosa@textil.com", password: "demo123", rolEsperado: "usuarios" },
-  { email: "alfredo@textil.com", password: "demo123", rolEsperado: "usuarios" },
-  { email: "eduardo@textil.com", password: "demo123", rolEsperado: "usuarios" },
-  { email: "juana@textil.com", password: "demo123", rolEsperado: "usuarios" },
-  { email: "alisson@textil.com", password: "demo123", rolEsperado: "usuarios" },
+  // Usuarios de producción (rol usuarios) - contraseñas individuales
+  { email: "hover.rojas@textil.com", password: "Hov226...", rolEsperado: "usuarios" },
+  { email: "maycol@textil.com", password: "Myc226...", rolEsperado: "usuarios" },
+  { email: "alicia@textil.com", password: "Alc226...", rolEsperado: "usuarios" },
+  { email: "elena@textil.com", password: "Ele226...", rolEsperado: "usuarios" },
+  { email: "rosa@textil.com", password: "Ros226...", rolEsperado: "usuarios" },
+  { email: "alfredo@textil.com", password: "Alf226...", rolEsperado: "usuarios" },
+  { email: "eduardo@textil.com", password: "Edu226...", rolEsperado: "usuarios" },
+  { email: "juana@textil.com", password: "Jun226...", rolEsperado: "usuarios" },
+  { email: "alisson@textil.com", password: "Als226...", rolEsperado: "usuarios" },
   { email: "usuario@textil.com", password: "demo123", rolEsperado: "usuarios" },
 ];
 
