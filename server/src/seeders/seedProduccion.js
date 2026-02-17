@@ -19,16 +19,23 @@ async function seedProduccion() {
         const usuarioIngenieria = usuarios[0];
         console.log(`✅ Usuario de ingeniería encontrado: ${usuarioIngenieria.nombre_completo}`);
 
-        // Obtener todos los usuarios de producción (rol 'usuarios') activos para asignarlos a líneas
+        // Solo los 9 usuarios de producción (por email) para asignar a líneas
+        const emailsProduccion = [
+            'hover.rojas@textil.com', 'maycol@textil.com', 'alicia@textil.com',
+            'elena@textil.com', 'rosa@textil.com', 'alfredo@textil.com',
+            'eduardo@textil.com', 'juana@textil.com', 'alisson@textil.com'
+        ];
+        const placeholders = emailsProduccion.map(() => '?').join(', ');
         const [todosUsuarios] = await pool.query(
             `SELECT u.id, u.nombre_completo 
              FROM usuarios u
              INNER JOIN roles r ON u.rol_id = r.id
-             WHERE u.is_active = TRUE AND r.nombre = 'usuarios'
-             ORDER BY u.nombre_completo`
+             WHERE u.is_active = TRUE AND r.nombre = 'usuarios' AND u.email IN (${placeholders})
+             ORDER BY u.nombre_completo`,
+            emailsProduccion
         );
         
-        console.log(`✅ ${todosUsuarios.length} usuarios de producción encontrados:`, 
+        console.log(`✅ ${todosUsuarios.length} usuarios de producción (9) encontrados:`, 
                     todosUsuarios.map(u => u.nombre_completo).join(', '));
 
         // Líneas de producción (13 líneas para 13 usuarios)
@@ -78,44 +85,34 @@ async function seedProduccion() {
         }
         console.log(`✅ ${lineasIds.length} líneas de producción creadas/actualizadas`);
 
-        // Desactivar todas las asignaciones existentes de usuarios de producción
-        await pool.query(
-            `UPDATE linea_usuario lu
-             INNER JOIN usuarios u ON lu.usuario_id = u.id
-             INNER JOIN roles r ON u.rol_id = r.id
-             SET lu.is_activo = FALSE
-             WHERE r.nombre = 'usuarios'`
-        );
-        
-        // Asignar usuarios a líneas de forma circular (round-robin)
-        for (let i = 0; i < todosUsuarios.length; i++) {
-            const usuario = todosUsuarios[i];
-            const lineaIndex = i % lineasIds.length;
-            const linea = lineasIds[lineaIndex];
-            
-            // Verificar si ya existe la asignación
-            const [existentes] = await pool.query(
-                "SELECT id FROM linea_usuario WHERE linea_id = ? AND usuario_id = ?",
-                [linea.id, usuario.id]
+        // Desactivar asignaciones de usuarios que no son de los 9 de producción
+        const idsNueve = todosUsuarios.map(u => u.id);
+        if (idsNueve.length > 0) {
+            const ph = idsNueve.map(() => '?').join(', ');
+            await pool.query(
+                `UPDATE linea_usuario SET is_activo = FALSE WHERE usuario_id NOT IN (${ph})`,
+                idsNueve
             );
-            
-            if (existentes.length > 0) {
-                // Actualizar asignación existente
-                await pool.query(
-                    "UPDATE linea_usuario SET is_activo = TRUE WHERE id = ?",
-                    [existentes[0].id]
+        }
+        
+        // Asignar los 9 usuarios a TODAS las líneas (cada línea muestra los 9)
+        for (const linea of lineasIds) {
+            for (const usuario of todosUsuarios) {
+                const [existentes] = await pool.query(
+                    "SELECT id FROM linea_usuario WHERE linea_id = ? AND usuario_id = ?",
+                    [linea.id, usuario.id]
                 );
-            } else {
-                // Crear nueva asignación
-                const asignacionId = randomUUID();
-                await pool.query(
-                    `INSERT INTO linea_usuario (id, linea_id, usuario_id, is_activo) 
-                     VALUES (?, ?, ?, TRUE)`,
-                    [asignacionId, linea.id, usuario.id]
-                );
+                if (existentes.length > 0) {
+                    await pool.query("UPDATE linea_usuario SET is_activo = TRUE WHERE id = ?", [existentes[0].id]);
+                } else {
+                    await pool.query(
+                        `INSERT INTO linea_usuario (id, linea_id, usuario_id, is_activo) VALUES (?, ?, ?, TRUE)`,
+                        [randomUUID(), linea.id, usuario.id]
+                    );
+                }
             }
         }
-        console.log(`✅ ${todosUsuarios.length} usuarios asignados a ${lineasIds.length} líneas`);
+        console.log(`✅ ${todosUsuarios.length} usuarios asignados a todas las ${lineasIds.length} líneas`);
 
         // Crear registros de producción para los últimos 7 días
         const hoy = new Date();
