@@ -378,13 +378,13 @@ const IngenieriaDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Usuarios Asignados */}
+              {/* Usuario de la línea (etiqueta "Linea [Nombre]") */}
               <div className="mb-3 sm:mb-4">
                 <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-2">👥 Usuarios:</p>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {linea.usuarios.map((usuario, idx) => (
+                  {linea.usuarios.slice(0, 9).map((usuario, idx) => (
                     <span key={idx} className="px-2 py-0.5 sm:py-1 bg-blue-50 text-blue-700 text-xs rounded-full truncate max-w-full">
-                      {usuario}
+                      Linea {usuario}
                     </span>
                   ))}
                 </div>

@@ -207,52 +207,68 @@ export const getLineasConUsuarios = async (req, res) => {
     }
 };
 
-// Obtener datos detallados de producción para el Dashboard de Ingeniería
+// Emails de los 9 usuarios de producción (una tarjeta por usuario en el dashboard)
+const EMAILS_9_PRODUCCION = [
+    'hover.rojas@textil.com', 'maycol@textil.com', 'alicia@textil.com',
+    'elena@textil.com', 'rosa@textil.com', 'alfredo@textil.com',
+    'eduardo@textil.com', 'juana@textil.com', 'alisson@textil.com'
+];
+
+// Obtener datos para el Dashboard de Ingeniería: 9 tarjetas "Linea [Nombre]" (una por usuario)
 export const getProduccionIngenieria = async (req, res) => {
     try {
         const hoy = new Date().toISOString().split('T')[0];
+        const ph = EMAILS_9_PRODUCCION.map(() => '?').join(', ');
 
-        // Obtener todas las líneas con sus datos de producción de hoy
-        const [lineas] = await pool.query(
-            `SELECT 
-                lp.id,
-                lp.nombre,
-                lp.objetivo_diario,
-                lp.status,
-                COALESCE(rp.cantidad_producida, 0) as produccion_actual,
-                COALESCE(rp.eficiencia, 0) as eficiencia,
-                COALESCE(rp.calidad, 0) as calidad,
-                GROUP_CONCAT(DISTINCT u.nombre_completo ORDER BY u.nombre_completo SEPARATOR ', ') as usuarios
-             FROM lineas_produccion lp
-             LEFT JOIN registros_produccion rp ON lp.id = rp.linea_id AND rp.fecha = ?
-             LEFT JOIN linea_usuario lu ON lp.id = lu.linea_id AND lu.is_activo = TRUE
-             LEFT JOIN usuarios u ON lu.usuario_id = u.id
-             GROUP BY lp.id, lp.nombre, lp.objetivo_diario, lp.status, rp.cantidad_producida, rp.eficiencia, rp.calidad
-             ORDER BY lp.nombre`,
-            [hoy]
+        // Obtener los 9 usuarios y una linea_id asociada para cada uno (para el modal Registrar)
+        const [usuarios] = await pool.query(
+            `SELECT u.id, u.nombre_completo,
+                    (SELECT lu.linea_id FROM linea_usuario lu WHERE lu.usuario_id = u.id AND lu.is_activo = TRUE LIMIT 1) as linea_id
+             FROM usuarios u
+             INNER JOIN roles r ON u.rol_id = r.id
+             WHERE u.is_active = TRUE AND r.nombre = 'usuarios' AND u.email IN (${ph})
+             ORDER BY u.nombre_completo`,
+            EMAILS_9_PRODUCCION
         );
 
-        // Calcular métricas generales
-        const lineasActivas = lineas.filter(l => l.status === 'activa');
-        const totalProduccion = lineasActivas.reduce((sum, l) => sum + (parseInt(l.produccion_actual) || 0), 0);
-        const eficienciaPromedio = lineasActivas.length > 0
-            ? lineasActivas.reduce((sum, l) => sum + (parseFloat(l.eficiencia) || 0), 0) / lineasActivas.length
+        const lineas = [];
+        let totalProduccion = 0;
+
+        for (const u of usuarios) {
+            const lineaId = u.linea_id || u.id;
+            const [reg] = await pool.query(
+                `SELECT COALESCE(SUM(rp.cantidad_producida), 0) as produccion_actual,
+                        COALESCE(AVG(rp.eficiencia), 0) as eficiencia
+                 FROM registros_produccion rp
+                 WHERE rp.usuario_id = ? AND rp.fecha = ?`,
+                [u.id, hoy]
+            );
+            const produccionActual = parseInt(reg[0]?.produccion_actual || 0);
+            const objetivo = 2000;
+            const eficiencia = objetivo > 0 ? Math.round((produccionActual / objetivo) * 100) : 0;
+            totalProduccion += produccionActual;
+            lineas.push({
+                id: lineaId,
+                idUsuario: u.id,
+                nombre: `Linea ${u.nombre_completo}`,
+                usuarios: [u.nombre_completo],
+                produccionActual,
+                produccionObjetivo: objetivo,
+                eficiencia,
+                status: 'activa'
+            });
+        }
+
+        const eficienciaPromedio = lineas.length > 0
+            ? Math.round(lineas.reduce((s, l) => s + l.eficiencia, 0) / lineas.length)
             : 0;
 
         res.json({
-            lineas: lineas.map(l => ({
-                id: l.id,
-                nombre: l.nombre,
-                usuarios: l.usuarios ? l.usuarios.split(', ') : [],
-                produccionActual: parseInt(l.produccion_actual) || 0,
-                produccionObjetivo: parseInt(l.objetivo_diario) || 2000,
-                eficiencia: parseFloat(l.eficiencia) || 0,
-                status: l.status
-            })),
+            lineas,
             metricas: {
                 totalProduccion,
-                eficienciaPromedio: Math.round(eficienciaPromedio),
-                lineasActivas: lineasActivas.length,
+                eficienciaPromedio,
+                lineasActivas: lineas.length,
                 totalLineas: lineas.length
             }
         });
