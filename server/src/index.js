@@ -28,7 +28,27 @@ import asistenciaRoutes from "./routes/asistencia.js";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// CORS: permitir frontend en producción (Render) y desarrollo local
+const allowedOrigins = [
+    "https://uit-frontend.onrender.com",
+    "https://uit-master2026.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001"
+];
+if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 
 // Ping de prueba (opcional)

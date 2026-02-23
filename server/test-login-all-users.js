@@ -1,9 +1,8 @@
-import fetch from "node-fetch";
 import dotenv from "dotenv";
-
 dotenv.config();
 
-const BASE_URL = process.env.TEST_API_URL || "http://localhost:5000/api";
+// URL de la API: pasar como primer argumento o variable TEST_API_URL (ej: node test-login-all-users.js https://uit-master.onrender.com/api)
+const BASE_URL = process.argv[2] || process.env.TEST_API_URL || "http://localhost:5000/api";
 
 const USERS = [
   { email: "admin@textil.com", password: "Adm226....", rolEsperado: "administrador" },
@@ -45,11 +44,15 @@ async function testLogin(user) {
     }
 
     const data = await res.json();
+    const role = (data?.user?.role || "").toLowerCase().trim();
+    const rolOk = !user.rolEsperado || role === (user.rolEsperado || "").toLowerCase().trim();
     return {
       email: user.email,
       ok: true,
-      role: data?.user?.role || null,
-      dashboard: data?.user?.dashboardPath || null,
+      role,
+      dashboard: data?.dashboardPath ?? data?.user?.dashboardPath ?? null,
+      rolEsperado: user.rolEsperado,
+      rolCorrecto: rolOk,
     };
   } catch (err) {
     return {
@@ -70,28 +73,29 @@ async function main() {
     results.push({ ...user, ...r });
   }
 
+  console.log(`Base URL: ${BASE_URL}\n`);
+
   for (const r of results) {
     if (r.ok) {
-      console.log(`✅ ${r.email} -> login OK (rol: ${r.role || "?"}, dashboard: ${r.dashboard || "?"})`);
+      const rolCheck = r.rolCorrecto === false ? " ⚠️ rol esperado: " + r.rolEsperado : "";
+      console.log(`✅ ${r.email} → OK (rol: ${r.role || "?"})${rolCheck}`);
     } else {
-      console.log(
-        `❌ ${r.email} -> login FALLÓ (status: ${r.status}, error: ${r.error})`
-      );
+      console.log(`❌ ${r.email} → FALLÓ (status: ${r.status}, error: ${r.error})`);
     }
   }
 
+  const ok = results.filter((r) => r.ok);
   const fallidos = results.filter((r) => !r.ok);
-  console.log("\nResumen:");
-  console.log(`   Usuarios OK: ${results.length - fallidos.length}`);
-  console.log(`   Usuarios con error: ${fallidos.length}`);
+  const rolIncorrecto = results.filter((r) => r.ok && r.rolCorrecto === false);
+
+  console.log("\n--- Resumen ---");
+  console.log(`   Login OK: ${ok.length}/${results.length}`);
+  console.log(`   Login fallido: ${fallidos.length}`);
+  if (rolIncorrecto.length > 0) console.log(`   Rol no coincide: ${rolIncorrecto.length}`);
 
   if (fallidos.length > 0) {
-    console.log("\nDetalles de errores:");
-    fallidos.forEach((f) => {
-      console.log(
-        ` - ${f.email}: status=${f.status}, error=${f.error}`
-      );
-    });
+    console.log("\nErrores de login:");
+    fallidos.forEach((f) => console.log(`   - ${f.email}: ${f.error}`));
   }
 }
 

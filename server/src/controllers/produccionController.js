@@ -220,6 +220,12 @@ export const getProduccionIngenieria = async (req, res) => {
         const hoy = new Date().toISOString().split('T')[0];
         const ph = EMAILS_9_PRODUCCION.map(() => '?').join(', ');
 
+        // Obtener siempre IDs válidos de lineas_produccion (evitar enviar usuario_id como linea_id)
+        const [lineasReales] = await pool.query(
+            "SELECT id FROM lineas_produccion ORDER BY nombre"
+        );
+        const idsLineasValidos = lineasReales.map((r) => r.id);
+
         // Obtener los 9 usuarios y una linea_id asociada para cada uno (para el modal Registrar)
         const [usuarios] = await pool.query(
             `SELECT u.id, u.nombre_completo,
@@ -234,8 +240,13 @@ export const getProduccionIngenieria = async (req, res) => {
         const lineas = [];
         let totalProduccion = 0;
 
-        for (const u of usuarios) {
-            const lineaId = u.linea_id || u.id;
+        for (let i = 0; i < usuarios.length; i++) {
+            const u = usuarios[i];
+            // Usar linea_id solo si existe en lineas_produccion; si no, asignar una línea real por índice
+            const lineaId = (u.linea_id && idsLineasValidos.includes(u.linea_id))
+                ? u.linea_id
+                : idsLineasValidos[i % Math.max(1, idsLineasValidos.length)];
+            if (!lineaId) continue; // Sin líneas en BD no se puede mostrar tarjeta válida
             const [reg] = await pool.query(
                 `SELECT COALESCE(SUM(rp.cantidad_producida), 0) as produccion_actual,
                         COALESCE(AVG(rp.eficiencia), 0) as eficiencia
@@ -387,11 +398,24 @@ export const getMiProduccion = async (req, res) => {
 };
 
 // Registrar producción diaria
+// Normalizar fecha a YYYY-MM-DD (MySQL)
+function normalizarFecha(fecha) {
+    if (!fecha) return null;
+    const s = String(fecha).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const d = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (d) return `${d[3]}-${d[2].padStart(2, '0')}-${d[1].padStart(2, '0')}`;
+    return s;
+}
+
 export const registrarProduccion = async (req, res) => {
     try {
         console.log('📥 Recibida petición de registro de producción:', req.body);
-        const { linea_id, fecha, cantidad_producida, cantidad_objetivo, cantidad_defectuosa, notas, estado } = req.body;
+        let { linea_id, fecha, cantidad_producida, cantidad_objetivo, cantidad_defectuosa, notas, estado } = req.body;
         const usuario_id = req.user?.id; // Obtener del token JWT si está autenticado
+
+        fecha = normalizarFecha(fecha);
+        if (estado && typeof estado === 'string') estado = estado.toLowerCase().trim();
 
         // Validaciones
         if (!linea_id || !fecha || cantidad_producida === undefined) {

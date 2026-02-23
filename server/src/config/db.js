@@ -1,6 +1,12 @@
 
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Cargar primero .env.local de la raíz (desarrollo local); luego server/.env si existe
+dotenv.config({ path: path.resolve(__dirname, "../../../.env.local"), override: false });
 dotenv.config();
 
 const sslOptions = process.env.DB_SSL === 'true'

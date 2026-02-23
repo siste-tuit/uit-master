@@ -131,9 +131,17 @@ async function runUsersSeeder(connection) {
         'sistemas@textil.com': 'siS2026...',
         'gerencia@textil.com': 'geR202...',
         'ingenieria@textil.com': 'inG226...',
-        'mantenimiento@textil.com': 'MAT266...'
-        // usuario@textil.com y usuarios de producción
-        // mantienen la contraseña por defecto configurada (demo123) a nivel de seeding
+        'mantenimiento@textil.com': 'MAT266...',
+        'usuario@textil.com': 'demo123',
+        'hover.rojas@textil.com': 'Hov226...',
+        'maycol@textil.com': 'Myc226...',
+        'alicia@textil.com': 'Alc226...',
+        'elena@textil.com': 'Ele226...',
+        'rosa@textil.com': 'Ros226...',
+        'alfredo@textil.com': 'Alf226...',
+        'eduardo@textil.com': 'Edu226...',
+        'juana@textil.com': 'Jun226...',
+        'alisson@textil.com': 'Als226...'
     };
 
     const USUARIOS = [
@@ -143,7 +151,16 @@ async function runUsersSeeder(connection) {
         { nombre_completo: 'Ana García', email: 'sistemas@textil.com', rol: 'sistemas', departamento: 'Sistemas', avatar: '💻' },
         { nombre_completo: 'Daniel P.', email: 'ingenieria@textil.com', rol: 'ingenieria', departamento: 'Ingeniería', avatar: '⚙️' },
         { nombre_completo: 'Pedro Martínez', email: 'mantenimiento@textil.com', rol: 'mantenimiento', departamento: 'Mantenimiento', avatar: '🔧' },
-        { nombre_completo: 'Carmen Torres', email: 'usuario@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' }
+        { nombre_completo: 'Carmen Torres', email: 'usuario@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Hover Rojas', email: 'hover.rojas@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Maycol', email: 'maycol@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Alicia', email: 'alicia@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Elena', email: 'elena@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Rosa', email: 'rosa@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Alfredo', email: 'alfredo@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Eduardo', email: 'eduardo@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Juana', email: 'juana@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' },
+        { nombre_completo: 'Alisson', email: 'alisson@textil.com', rol: 'usuarios', departamento: 'Producción', avatar: '👷' }
     ];
 
     for (const usuario of USUARIOS) {
