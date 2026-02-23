@@ -247,15 +247,21 @@ export const getProduccionIngenieria = async (req, res) => {
                 ? u.linea_id
                 : idsLineasValidos[i % Math.max(1, idsLineasValidos.length)];
             if (!lineaId) continue; // Sin líneas en BD no se puede mostrar tarjeta válida
+            // Sumar por linea_id y fecha para que lo registrado por ingeniería se vea en la tarjeta/gráfico
             const [reg] = await pool.query(
                 `SELECT COALESCE(SUM(rp.cantidad_producida), 0) as produccion_actual,
                         COALESCE(AVG(rp.eficiencia), 0) as eficiencia
                  FROM registros_produccion rp
-                 WHERE rp.usuario_id = ? AND rp.fecha = ?`,
-                [u.id, hoy]
+                 WHERE rp.linea_id = ? AND rp.fecha = ?`,
+                [lineaId, hoy]
             );
             const produccionActual = parseInt(reg[0]?.produccion_actual || 0);
-            const objetivo = 2000;
+            // Usar objetivo_diario de la línea si existe
+            const [lineaObj] = await pool.query(
+                "SELECT COALESCE(objetivo_diario, 2000) as obj FROM lineas_produccion WHERE id = ?",
+                [lineaId]
+            );
+            const objetivo = parseInt(lineaObj[0]?.obj || 2000);
             const eficiencia = objetivo > 0 ? Math.round((produccionActual / objetivo) * 100) : 0;
             totalProduccion += produccionActual;
             lineas.push({
