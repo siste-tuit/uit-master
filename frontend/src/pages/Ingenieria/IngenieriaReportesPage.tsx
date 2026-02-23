@@ -69,12 +69,11 @@ const IngenieriaReportesPage: React.FC = () => {
       try {
         setLoadingLineas(true);
         const token = localStorage.getItem('erp_token');
-        const response = await fetch(`${API_BASE_URL_CORE}/produccion/lineas-con-usuarios`, {
+        const response = await fetch(`${API_BASE_URL_CORE}/produccion/ingenieria`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined
         });
         if (response.ok) {
           const data = await response.json();
-          console.log('📊 Líneas recibidas del backend (Reportes):', data.lineas.length);
           setLineasProduccion(data.lineas || []);
         } else {
           console.error('❌ Error en la respuesta del servidor:', response.status);
