@@ -1,4 +1,5 @@
 // Script para agregar campo enviado_por a la tabla pedidos_recibidos
+// Uso contra Railway: en PowerShell: $env:DB_URL="mysql://root:TU_PASSWORD@gondola.proxy.rlwy.net:48229/railway"; cd server; node src/scripts/actualizar-pedidos-recibidos.js
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
@@ -7,12 +8,17 @@ dotenv.config();
 async function actualizarTablaPedidos() {
     let connection;
     try {
-    connection = await mysql.createConnection({
-            host: process.env.DB_HOST || 'localhost',
-            user: process.env.DB_USER || 'root',
-            password: process.env.DB_PASS,
-            database: process.env.DB_NAME || 'uit'
-        });
+        if (process.env.DB_URL) {
+            connection = await mysql.createConnection(process.env.DB_URL);
+        } else {
+            connection = await mysql.createConnection({
+                host: process.env.DB_HOST || 'localhost',
+                port: parseInt(process.env.DB_PORT || '3306', 10),
+                user: process.env.DB_USER || 'root',
+                password: process.env.DB_PASS,
+                database: process.env.DB_NAME || 'uit'
+            });
+        }
 
         console.log('🔄 Actualizando tabla pedidos_recibidos...\n');
 
@@ -65,13 +71,18 @@ async function actualizarTablaPedidos() {
             }
         }
 
-        // Agregar índices
+        // Agregar índices (MySQL no soporta IF NOT EXISTS en CREATE INDEX)
         try {
-            await connection.execute(`CREATE INDEX IF NOT EXISTS idx_enviado_por ON pedidos_recibidos(enviado_por)`);
-            await connection.execute(`CREATE INDEX IF NOT EXISTS idx_estado ON pedidos_recibidos(estado)`);
-            console.log('✅ Índices agregados');
+            await connection.execute(`CREATE INDEX idx_enviado_por ON pedidos_recibidos(enviado_por)`);
+            console.log('✅ Índice idx_enviado_por agregado');
         } catch (error) {
-            console.log('⚠️ Índices ya existen o error:', error.message);
+            if (error.code !== 'ER_DUP_KEYNAME') console.log('⚠️ idx_enviado_por:', error.message);
+        }
+        try {
+            await connection.execute(`CREATE INDEX idx_estado ON pedidos_recibidos(estado)`);
+            console.log('✅ Índice idx_estado agregado');
+        } catch (error) {
+            if (error.code !== 'ER_DUP_KEYNAME') console.log('⚠️ idx_estado:', error.message);
         }
 
         console.log('✅ Tabla pedidos_recibidos actualizada correctamente');

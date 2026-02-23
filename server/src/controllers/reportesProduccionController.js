@@ -598,13 +598,16 @@ export const getTodosLosReportes = async (req, res) => {
 
         let query = `
             SELECT 
-                rd.*,
-                (rd.cantidad_producida - rd.cantidad_defectuosa) as cantidad_neta,
+                rd.id, rd.usuario_id, rd.fecha, rd.cantidad_producida,
+                COALESCE(rd.cantidad_defectuosa, 0) as cantidad_defectuosa,
+                rd.linea_produccion_id as linea_id,
+                rd.created_at as fecha_creacion,
+                (rd.cantidad_producida - COALESCE(rd.cantidad_defectuosa, 0)) as cantidad_neta,
                 lp.nombre as linea_nombre,
                 u.nombre_completo as usuario_nombre,
                 u.email as usuario_email
             FROM reportes_diarios rd
-            LEFT JOIN lineas_produccion lp ON rd.linea_id = lp.id
+            LEFT JOIN lineas_produccion lp ON lp.id = rd.linea_produccion_id
             LEFT JOIN usuarios u ON rd.usuario_id = u.id
             WHERE 1=1
         `;
@@ -626,7 +629,7 @@ export const getTodosLosReportes = async (req, res) => {
             params.push(fecha_fin);
         }
 
-        query += ' ORDER BY rd.fecha DESC, u.nombre_completo ASC, rd.fecha_creacion DESC';
+        query += ' ORDER BY rd.fecha DESC, u.nombre_completo ASC, rd.created_at DESC';
 
         const [reportes] = await pool.query(query, params);
 
