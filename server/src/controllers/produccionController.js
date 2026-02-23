@@ -183,6 +183,7 @@ export const getLineasConUsuarios = async (req, res) => {
              FROM lineas_produccion lp
              LEFT JOIN linea_usuario lu ON lp.id = lu.linea_id AND lu.is_activo = TRUE
              LEFT JOIN usuarios u ON lu.usuario_id = u.id
+             WHERE lp.status = 'activa'
              GROUP BY lp.id, lp.nombre, lp.status
              ORDER BY lp.nombre`
         );
